@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { DownloadSimple, Database, ShieldCheck, Zap, Info } from '@phosphor-icons/react';
+import { DownloadSimple, Database, ShieldCheck, Lightning, Info } from '@phosphor-icons/react';
 
 const Settings: React.FC = () => {
     const { logs, projects, isDemoMode } = useApp();
@@ -67,7 +67,7 @@ const Settings: React.FC = () => {
                     </p>
                     <div className="flex gap-4">
                         <div className="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 flex items-center gap-2 border border-slate-100">
-                            <Zap size={14} weight="fill" className="text-amber-500" /> TLS 1.3 Active
+                            <Lightning size={14} weight="fill" className="text-amber-500" /> TLS 1.3 Active
                         </div>
                         <div className="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 flex items-center gap-2 border border-slate-100">
                             <Info size={14} weight="fill" className="text-sky-500" /> HIPAA Compliant

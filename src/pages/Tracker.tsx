@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Clock, Tag, Plus, Check, PencilSimple, Trash, X } from '@phosphor-icons/react';
-import { LogItem } from '../types';
+import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk } from '@phosphor-icons/react';
+import type { LogItem } from '../types';
 
 const Tracker: React.FC = () => {
     const { projects, logs, addLog, updateLog, deleteLog } = useApp();
