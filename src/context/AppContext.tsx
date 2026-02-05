@@ -92,8 +92,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             enterDemoMode();
             return;
         }
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+        } catch (error: any) {
+            console.error('Auth Error:', error);
+            if (error.code === 'auth/popup-blocked') {
+                alert('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+            } else if (error.code === 'auth/operation-not-allowed') {
+                alert('Google Sign-in is not enabled in your Firebase Console. Go to Build > Authentication > Sign-in method.');
+            } else {
+                alert(`Authentication error: ${error.message}`);
+            }
+        }
     };
 
     const signOut = async () => {
