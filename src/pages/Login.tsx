@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkle, ArrowRight } from '@phosphor-icons/react';
 
 const Login: React.FC = () => {
     const { signInWithGoogle, enterDemoMode, user, isDemoMode } = useApp();
@@ -23,9 +23,9 @@ const Login: React.FC = () => {
             <div className="max-w-md w-full relative">
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-2xl mb-6">
-                        <span className="text-slate-950 font-serif font-bold text-4xl">T</span>
+                        <span className="text-slate-950 font-bold text-4xl">T</span>
                     </div>
-                    <h1 className="text-4xl font-serif text-white mb-2 tracking-tight">Tribute Studio</h1>
+                    <h1 className="text-4xl text-white mb-2 tracking-tight">Tribute Studio</h1>
                     <p className="text-slate-400 font-sans tracking-wide">Business Intelligence for the Creative Mind</p>
                 </div>
 
@@ -49,7 +49,7 @@ const Login: React.FC = () => {
                         onClick={enterDemoMode}
                         className="w-full bg-slate-800 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-slate-700 transition-all duration-300 border border-white/5"
                     >
-                        <Sparkles size={18} className="text-amber-400" />
+                        <Sparkle size={18} weight="fill" className="text-amber-400" />
                         Explore Demo Mode
                         <ArrowRight size={18} className="ml-auto opacity-50" />
                     </button>

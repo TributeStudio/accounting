@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { processStatement } from '../services/gemini';
-import { Sparkles, Loader2, Save, Trash2 } from 'lucide-react';
+import { Sparkle, CircleNotch, FloppyDisk, Trash } from '@phosphor-icons/react';
 
 const StatementAI: React.FC = () => {
     const { projects, addLog } = useApp();
@@ -76,7 +76,7 @@ const StatementAI: React.FC = () => {
     return (
         <div className="space-y-8">
             <div className="flex flex-col">
-                <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2">Statement AI</h1>
+                <h1 className="text-4xl font-bold text-slate-900 mb-2">Statement AI</h1>
                 <p className="text-slate-500">Extract expenses from bank statements or invoices using Gemini AI.</p>
             </div>
 
@@ -95,7 +95,7 @@ const StatementAI: React.FC = () => {
                         disabled={isProcessing || !inputText.trim()}
                         className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-transform active:scale-95 disabled:opacity-50"
                     >
-                        {isProcessing ? <Loader2 size={20} className="animate-spin" /> : <Sparkles size={20} className="text-amber-400" />}
+                        {isProcessing ? <CircleNotch size={20} className="animate-spin" /> : <Sparkle size={20} weight="fill" className="text-amber-400" />}
                         Analyze with Gemini
                     </button>
                 </div>
@@ -103,7 +103,7 @@ const StatementAI: React.FC = () => {
                 {/* Results Area */}
                 <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col h-[500px]">
                     <div className="p-6 border-b border-slate-50 flex items-center justify-between">
-                        <h2 className="font-serif font-bold text-lg">Extracted Items</h2>
+                        <h2 className="font-bold text-lg">Extracted Items</h2>
                         <span className="bg-sky-50 text-sky-600 px-3 py-1 rounded-full text-xs font-bold">
                             {extractedItems.length} Items Found
                         </span>
@@ -129,7 +129,7 @@ const StatementAI: React.FC = () => {
                                                     type="checkbox"
                                                     checked={item.selected}
                                                     onChange={() => toggleItem(item.id)}
-                                                    className="rounded border-slate-300 focus:ring-slate-900"
+                                                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                                 />
                                             </td>
                                             <td className="py-4 text-sm text-slate-600 tabular-nums">{item.date}</td>
@@ -137,7 +137,7 @@ const StatementAI: React.FC = () => {
                                             <td className="py-4 text-sm font-bold text-slate-900 text-right tabular-nums">${item.amount}</td>
                                             <td className="py-4 text-right">
                                                 <button onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
-                                                    <Trash2 size={16} />
+                                                    <Trash size={16} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -147,9 +147,9 @@ const StatementAI: React.FC = () => {
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-slate-400 opacity-60">
                                 {isProcessing ? (
-                                    <Loader2 size={40} className="animate-spin mb-4" />
+                                    <CircleNotch size={40} className="animate-spin mb-4" />
                                 ) : (
-                                    <Sparkles size={40} className="mb-4" />
+                                    <Sparkle size={40} className="mb-4" />
                                 )}
                                 <p>{status || 'Results will appear here.'}</p>
                             </div>
@@ -187,7 +187,7 @@ const StatementAI: React.FC = () => {
                                     disabled={!selectedProject || isProcessing}
                                     className="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 disabled:opacity-50"
                                 >
-                                    <Save size={16} /> Save
+                                    <FloppyDisk size={16} weight="duotone" /> Save
                                 </button>
                             </div>
                         </div>

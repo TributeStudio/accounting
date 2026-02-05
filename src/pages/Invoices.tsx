@@ -4,11 +4,11 @@ import { draftInvoiceEmail } from '../services/gemini';
 import {
     FileText,
     Printer,
-    Mail,
-    Loader2,
+    Envelope,
+    CircleNotch,
     X,
-    Sparkles
-} from 'lucide-react';
+    Sparkle
+} from '@phosphor-icons/react';
 
 const Invoices: React.FC = () => {
     const { logs, projects } = useApp();
@@ -59,7 +59,7 @@ const Invoices: React.FC = () => {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2">Billing Center</h1>
+                    <h1 className="text-4xl font-bold text-slate-900 mb-2">Billing Center</h1>
                     <p className="text-slate-500">Generate professional invoices for your clients.</p>
                 </div>
                 <div className="flex gap-3">
@@ -76,15 +76,15 @@ const Invoices: React.FC = () => {
                         onClick={() => setShowPreview(true)}
                         className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors disabled:opacity-50"
                     >
-                        <Printer size={18} /> Preview Invoice
+                        <Printer size={18} weight="duotone" /> Preview Invoice
                     </button>
                 </div>
             </div>
 
             {!selectedClientId ? (
                 <div className="bg-slate-100/50 border-2 border-dashed border-slate-200 rounded-3xl p-20 text-center">
-                    <FileText size={48} className="mx-auto text-slate-300 mb-4" />
-                    <h2 className="text-xl font-serif font-bold text-slate-400">No Client Selected</h2>
+                    <FileText size={48} weight="duotone" className="mx-auto text-slate-300 mb-4" />
+                    <h2 className="text-xl font-bold text-slate-400">No Client Selected</h2>
                     <p className="text-slate-400">Choose a client above to view billable items.</p>
                 </div>
             ) : (
@@ -128,8 +128,8 @@ const Invoices: React.FC = () => {
                         </tbody>
                         <tfoot>
                             <tr className="bg-slate-50/50">
-                                <td colSpan={3} className="px-8 py-8 text-right font-serif font-bold text-lg">Invoice Total</td>
-                                <td className="px-8 py-8 text-right font-serif font-bold text-2xl text-slate-900">${totals.total.toFixed(2)}</td>
+                                <td colSpan={3} className="px-8 py-8 text-right font-bold text-lg">Invoice Total</td>
+                                <td className="px-8 py-8 text-right font-bold text-2xl text-slate-900">${totals.total.toFixed(2)}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -141,13 +141,13 @@ const Invoices: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
                     <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                            <h2 className="font-serif font-bold text-xl">Invoice Preview</h2>
+                            <h2 className="font-bold text-xl">Invoice Preview</h2>
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleDraftEmail}
                                     className="flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-600 rounded-lg text-sm font-bold hover:bg-sky-100 transition-colors"
                                 >
-                                    {emailLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                                    {emailLoading ? <CircleNotch size={16} className="animate-spin" /> : <Envelope size={16} weight="duotone" />}
                                     Draft with AI
                                 </button>
                                 <button
@@ -157,7 +157,7 @@ const Invoices: React.FC = () => {
                                     Print PDF
                                 </button>
                                 <button onClick={() => setShowPreview(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                                    <X size={20} />
+                                    <X size={20} weight="bold" />
                                 </button>
                             </div>
                         </div>
@@ -167,13 +167,13 @@ const Invoices: React.FC = () => {
                                 <div className="flex justify-between items-start mb-12">
                                     <div>
                                         <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mb-4">
-                                            <span className="text-white font-serif font-bold text-2xl">T</span>
+                                            <span className="text-white font-bold text-2xl">T</span>
                                         </div>
-                                        <h1 className="text-2xl font-serif font-bold">Tribute Studio</h1>
+                                        <h1 className="text-2xl font-bold">Tribute Studio</h1>
                                         <p className="text-sm text-slate-500">123 Creative Avenue,<br />Design District, CA 90210</p>
                                     </div>
                                     <div className="text-right">
-                                        <h2 className="text-4xl font-serif font-bold text-slate-900 mb-2 uppercase tracking-tighter">Invoice</h2>
+                                        <h2 className="text-4xl font-bold text-slate-900 mb-2 uppercase tracking-tighter">Invoice</h2>
                                         <p className="text-sm text-slate-500 font-bold uppercase tracking-widest">#{Math.floor(Math.random() * 10000)}</p>
                                         <p className="text-sm text-slate-500 mt-4">Date: {new Date().toLocaleDateString()}</p>
                                     </div>
@@ -182,7 +182,7 @@ const Invoices: React.FC = () => {
                                 <div className="grid grid-cols-2 gap-12 mb-12 border-t border-b border-slate-100 py-8">
                                     <div>
                                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Bill To:</h3>
-                                        <p className="text-lg font-bold text-slate-900 font-serif">{selectedClientId}</p>
+                                        <p className="text-lg font-bold text-slate-900">{selectedClientId}</p>
                                         <p className="text-sm text-slate-500 mt-1">Authorized Representative</p>
                                     </div>
                                     <div>
@@ -230,7 +230,7 @@ const Invoices: React.FC = () => {
                                             <span>Tax (0%)</span>
                                             <span>$0.00</span>
                                         </div>
-                                        <div className="border-t border-slate-900 pt-4 flex justify-between font-serif font-bold text-2xl text-slate-900">
+                                        <div className="border-t border-slate-900 pt-4 flex justify-between font-bold text-2xl text-slate-900">
                                             <span>Total Due</span>
                                             <span>${totals.total.toFixed(2)}</span>
                                         </div>
@@ -239,7 +239,7 @@ const Invoices: React.FC = () => {
 
                                 <div className="mt-20 pt-12 border-t border-slate-100 text-center">
                                     <p className="text-sm text-slate-400">Thank you for your business. We truly value our collaboration.</p>
-                                    <p className="text-xs font-serif italic text-slate-300 mt-4">Elevating creative standards since 2024.</p>
+                                    <p className="text-xs italic text-slate-300 mt-4">Elevating creative standards since 2024.</p>
                                 </div>
                             </div>
                         </div>
@@ -249,11 +249,11 @@ const Invoices: React.FC = () => {
                             <div className="bg-slate-50 p-8 border-t border-slate-100 animate-in slide-in-from-bottom duration-500">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="font-bold flex items-center gap-2 text-slate-900">
-                                        <Sparkles size={16} className="text-amber-500" />
+                                        <Sparkle size={16} weight="fill" className="text-amber-500" />
                                         AI-Powered Email Draft
                                     </h3>
                                     <button onClick={() => setEmailDraft(null)} className="text-slate-400 hover:text-slate-600">
-                                        <X size={16} />
+                                        <X size={16} weight="bold" />
                                     </button>
                                 </div>
                                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">

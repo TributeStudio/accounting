@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { Download, Database, Shield, Zap, Info } from 'lucide-react';
+import { DownloadSimple, Database, ShieldCheck, Zap, Info } from '@phosphor-icons/react';
 
 const Settings: React.FC = () => {
     const { logs, projects, isDemoMode } = useApp();
@@ -24,7 +24,7 @@ const Settings: React.FC = () => {
     return (
         <div className="max-w-3xl space-y-8">
             <div>
-                <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2">Systems Configuration</h1>
+                <h1 className="text-4xl font-bold text-slate-900 mb-2">Systems Configuration</h1>
                 <p className="text-slate-500">Manage your workspace preferences and data security.</p>
             </div>
 
@@ -33,10 +33,10 @@ const Settings: React.FC = () => {
                 <div className="p-8">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="p-3 bg-sky-50 text-sky-600 rounded-2xl">
-                            <Database size={24} />
+                            <Database size={24} weight="duotone" />
                         </div>
                         <div>
-                            <h2 className="font-serif font-bold text-lg">Data & Portability</h2>
+                            <h2 className="font-bold text-lg">Data & Portability</h2>
                             <p className="text-xs text-slate-400 uppercase tracking-widest font-sans font-bold">Secure Backups</p>
                         </div>
                     </div>
@@ -47,7 +47,7 @@ const Settings: React.FC = () => {
                         onClick={handleExport}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
                     >
-                        <Download size={18} /> Export JSON Data
+                        <DownloadSimple size={18} weight="bold" /> Export JSON Data
                     </button>
                 </div>
 
@@ -55,10 +55,10 @@ const Settings: React.FC = () => {
                 <div className="p-8">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
-                            <Shield size={24} />
+                            <ShieldCheck size={24} weight="duotone" />
                         </div>
                         <div>
-                            <h2 className="font-serif font-bold text-lg">Security & Privacy</h2>
+                            <h2 className="font-bold text-lg">Security & Privacy</h2>
                             <p className="text-xs text-slate-400 uppercase tracking-widest font-sans font-bold">End-to-End Encryption</p>
                         </div>
                     </div>
@@ -67,17 +67,17 @@ const Settings: React.FC = () => {
                     </p>
                     <div className="flex gap-4">
                         <div className="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 flex items-center gap-2 border border-slate-100">
-                            <Zap size={14} /> TLS 1.3 Active
+                            <Zap size={14} weight="fill" className="text-amber-500" /> TLS 1.3 Active
                         </div>
                         <div className="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 flex items-center gap-2 border border-slate-100">
-                            <Info size={14} /> HIPAA Compliant
+                            <Info size={14} weight="fill" className="text-sky-500" /> HIPAA Compliant
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl flex gap-4">
-                <Info className="text-amber-500 flex-shrink-0" />
+                <Info size={24} weight="fill" className="text-amber-500 flex-shrink-0" />
                 <div>
                     <h3 className="text-sm font-bold text-amber-900">Advanced AI Integration</h3>
                     <p className="text-xs text-amber-700 mt-1 leading-relaxed">

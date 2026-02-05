@@ -11,24 +11,24 @@ import {
     Cell
 } from 'recharts';
 import {
-    DollarSign,
+    CurrencyDollar,
     Clock,
     Briefcase,
     ArrowUpRight
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 
 const StatCard = ({ title, value, icon: Icon, color }: any) => (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-transform hover:scale-[1.02]">
         <div className="flex items-center justify-between mb-4">
             <div className={`p-3 rounded-xl bg-${color}-50 text-${color}-600`}>
-                <Icon size={24} />
+                <Icon size={24} weight="duotone" />
             </div>
             <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
                 <ArrowUpRight size={14} className="mr-1" /> +12%
             </span>
         </div>
         <h3 className="text-slate-500 text-sm font-medium mb-1 font-sans">{title}</h3>
-        <p className="text-3xl font-serif font-bold text-slate-900">{value}</p>
+        <p className="text-3xl font-bold text-slate-900">{value}</p>
     </div>
 );
 
@@ -64,7 +64,7 @@ const Dashboard: React.FC = () => {
     return (
         <div className="space-y-8">
             <div className="flex flex-col">
-                <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2">Executive Summary</h1>
+                <h1 className="text-4xl font-bold text-slate-900 mb-2">Executive Summary</h1>
                 <p className="text-slate-500">Your studio performance at a glance.</p>
             </div>
 
@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
                 <StatCard
                     title="Total Revenue"
                     value={`$${stats.totalRevenue.toLocaleString()}`}
-                    icon={DollarSign}
+                    icon={CurrencyDollar}
                     color="sky"
                 />
                 <StatCard
@@ -93,9 +93,9 @@ const Dashboard: React.FC = () => {
                 {/* Chart */}
                 <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-xl font-serif font-bold">Revenue Distribution</h2>
-                        <select className="bg-slate-50 border-none rounded-lg text-sm font-medium px-4 py-2">
-                            <span className="mr-2">Month to Date</span>
+                        <h2 className="text-xl font-bold">Revenue Distribution</h2>
+                        <select className="bg-slate-50 border-none rounded-lg text-sm font-medium px-4 py-2 focus:ring-1 focus:ring-slate-200">
+                            <option>Month to Date</option>
                         </select>
                     </div>
                     <div className="h-[350px]">
@@ -135,7 +135,7 @@ const Dashboard: React.FC = () => {
 
                 {/* Recent Activity */}
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <h2 className="text-xl font-serif font-bold mb-6">Recent Activity</h2>
+                    <h2 className="text-xl font-bold mb-6">Recent Activity</h2>
                     <div className="space-y-6">
                         {logs.slice(0, 5).map((log) => (
                             <div key={log.id} className="flex gap-4">

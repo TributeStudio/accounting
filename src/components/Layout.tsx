@@ -1,14 +1,14 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-    LayoutDashboard,
+    SquaresFour,
     Timer,
-    ClipboardList,
-    FileText,
-    Settings,
-    LogOut,
-    Sparkles
-} from 'lucide-react';
+    Files,
+    Users,
+    Gear,
+    SignOut,
+    Sparkle
+} from '@phosphor-icons/react';
 import { useApp } from '../context/AppContext';
 
 const SidebarItem = ({ to, icon: Icon, label }: { to: string, icon: React.ElementType, label: string }) => (
@@ -21,7 +21,7 @@ const SidebarItem = ({ to, icon: Icon, label }: { to: string, icon: React.Elemen
                 : 'text-slate-400 hover:text-white hover:bg-white/5'}
     `}
     >
-        <Icon size={20} />
+        <Icon size={20} weight="duotone" />
         <span className="font-medium">{label}</span>
     </NavLink>
 );
@@ -41,29 +41,29 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <aside className="w-64 bg-slate-900 text-white flex flex-col p-6 shadow-2xl">
                 <div className="flex items-center gap-3 mb-12">
                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-                        <span className="text-slate-900 font-serif font-bold text-xl">T</span>
+                        <span className="text-slate-900 font-bold text-xl">T</span>
                     </div>
                     <div>
-                        <h1 className="text-xl font-serif font-bold tracking-tight">Tribute</h1>
+                        <h1 className="text-xl font-bold tracking-tight">Tribute</h1>
                         <p className="text-[10px] uppercase tracking-[0.2em] text-slate-400 font-sans">Creative Studio</p>
                     </div>
                 </div>
 
                 <nav className="flex-1 space-y-2">
-                    <SidebarItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
+                    <SidebarItem to="/dashboard" icon={SquaresFour} label="Dashboard" />
                     <SidebarItem to="/tracker" icon={Timer} label="Tracker" />
-                    <SidebarItem to="/ai-statement" icon={Sparkles} label="Statement AI" />
-                    <SidebarItem to="/invoices" icon={FileText} label="Invoices" />
-                    <SidebarItem to="/projects" icon={ClipboardList} label="Projects" />
+                    <SidebarItem to="/ai-statement" icon={Sparkle} label="Statement AI" />
+                    <SidebarItem to="/invoices" icon={Files} label="Invoices" />
+                    <SidebarItem to="/projects" icon={Users} label="Projects" />
                 </nav>
 
                 <div className="pt-6 border-t border-white/5 space-y-2">
-                    <SidebarItem to="/settings" icon={Settings} label="Settings" />
+                    <SidebarItem to="/settings" icon={Gear} label="Settings" />
                     <button
                         onClick={handleSignOut}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200"
                     >
-                        <LogOut size={20} />
+                        <SignOut size={20} weight="duotone" />
                         <span className="font-medium">Sign Out</span>
                     </button>
                 </div>

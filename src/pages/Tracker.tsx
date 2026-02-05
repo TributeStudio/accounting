@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Clock, Tag, Plus, Check } from 'lucide-react';
+import { Clock, Tag, Plus, Check } from '@phosphor-icons/react';
 
 const Tracker: React.FC = () => {
     const { projects, addLog } = useApp();
@@ -66,7 +66,7 @@ const Tracker: React.FC = () => {
     return (
         <div className="max-w-2xl mx-auto space-y-8">
             <div className="flex flex-col items-center">
-                <h1 className="text-4xl font-serif font-bold text-slate-900 mb-2 text-center">Work Tracker</h1>
+                <h1 className="text-4xl font-bold text-slate-900 mb-2 text-center">Work Tracker</h1>
                 <p className="text-slate-500 text-center">Capture every billable second and expense.</p>
             </div>
 
@@ -78,14 +78,14 @@ const Tracker: React.FC = () => {
                         className={`flex-1 py-4 font-medium text-sm flex items-center justify-center gap-2 transition-all
               ${activeTab === 'TIME' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
                     >
-                        <Clock size={16} /> Billable Hours
+                        <Clock size={16} weight="duotone" /> Billable Hours
                     </button>
                     <button
                         onClick={() => setActiveTab('EXPENSE')}
                         className={`flex-1 py-4 font-medium text-sm flex items-center justify-center gap-2 transition-all
               ${activeTab === 'EXPENSE' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
                     >
-                        <Tag size={16} /> Project Expense
+                        <Tag size={16} weight="duotone" /> Project Expense
                     </button>
                 </div>
 
@@ -174,7 +174,7 @@ const Tracker: React.FC = () => {
                         <div className="bg-slate-900 p-6 rounded-2xl flex justify-between items-center text-white">
                             <div>
                                 <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Client Billable</p>
-                                <p className="text-3xl font-serif font-bold">${billableAmount.toFixed(2)}</p>
+                                <p className="text-3xl font-bold">${billableAmount.toFixed(2)}</p>
                             </div>
                             <div className="text-right">
                                 <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Profit Margin</p>
@@ -192,9 +192,9 @@ const Tracker: React.FC = () => {
                         {isLoading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : success ? (
-                            <><Check size={20} /> Entry Saved</>
+                            <><Check size={20} weight="bold" /> Entry Saved</>
                         ) : (
-                            <><Plus size={20} /> Log Activity</>
+                            <><Plus size={20} weight="bold" /> Log Activity</>
                         )}
                     </button>
                 </form>
