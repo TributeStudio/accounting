@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
-import { Sparkle, ArrowRight } from '@phosphor-icons/react';
+import { Sparkle, ArrowRight, GoogleLogo } from '@phosphor-icons/react';
 
 const Login: React.FC = () => {
     const { signInWithGoogle, enterDemoMode, user, isDemoMode } = useApp();
@@ -34,7 +34,7 @@ const Login: React.FC = () => {
                         onClick={signInWithGoogle}
                         className="w-full bg-white text-slate-950 px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-3 hover:bg-slate-100 transition-all duration-300 mb-4 shadow-xl"
                     >
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/layout/google.svg" alt="Google" className="w-5 h-5" />
+                        <GoogleLogo size={24} weight="bold" className="text-slate-900" />
                         Sign in with Google
                     </button>
 

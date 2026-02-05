@@ -88,6 +88,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const signInWithGoogle = async () => {
         if (!isConfigValid) {
+            alert('Firebase configuration is missing. To use real Google Auth, please add your VITE_FIREBASE_* environment variables. Entering Demo Mode instead.');
             enterDemoMode();
             return;
         }
