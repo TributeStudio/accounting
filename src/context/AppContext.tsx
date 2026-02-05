@@ -11,6 +11,7 @@ interface AppContextType extends AppState {
     signOut: () => Promise<void>;
     addProject: (project: Omit<Project, 'id' | 'createdAt'>) => Promise<void>;
     addLog: (log: Omit<LogItem, 'id' | 'createdAt'>) => Promise<void>;
+    updateLog: (id: string, updates: Partial<LogItem>) => Promise<void>;
     deleteLog: (id: string) => Promise<void>;
     updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
 }
@@ -135,6 +136,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
+    const updateLog = async (id: string, updates: Partial<LogItem>) => {
+        if (state.isDemoMode) {
+            setState(prev => ({
+                ...prev,
+                logs: prev.logs.map(l => l.id === id ? { ...l, ...updates } : l)
+            }));
+        } else if (state.user) {
+            await updateDoc(doc(db, 'users', state.user.uid, 'logs', id), updates);
+        }
+    };
+
     const updateProject = async (id: string, updates: Partial<Project>) => {
         if (state.isDemoMode) {
             setState(prev => ({
@@ -154,6 +166,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             signOut,
             addProject,
             addLog,
+            updateLog,
             deleteLog,
             updateProject
         }}>
