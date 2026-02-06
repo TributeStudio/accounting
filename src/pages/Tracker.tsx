@@ -56,12 +56,14 @@ const Tracker: React.FC = () => {
                 await addLog(logData);
             }
 
+            // Important: Set loading to false BEFORE setting success
+            // to avoid state flickering or overlap
+            setIsLoading(false);
             setSuccess(true);
             resetForm();
             setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
             console.error(error);
-        } finally {
             setIsLoading(false);
         }
     };

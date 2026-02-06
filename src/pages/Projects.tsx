@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, Briefcase, User, Pencil } from '@phosphor-icons/react';
+import { Plus, UserSquare, User, Pencil } from '@phosphor-icons/react';
 import type { Project } from '../types';
 
 const Projects: React.FC = () => {
@@ -64,14 +64,14 @@ const Projects: React.FC = () => {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-slate-900 mb-2">Projects Portfolio</h1>
+                    <h1 className="text-4xl font-bold text-slate-900 mb-2">Guests Portfolio</h1>
                     <p className="text-slate-500">Manage your clients and active engagements.</p>
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
                     className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg"
                 >
-                    <Plus size={18} weight="bold" /> New Project
+                    <Plus size={18} weight="bold" /> New Guest
                 </button>
             </div>
 
@@ -80,13 +80,13 @@ const Projects: React.FC = () => {
                     <div key={project.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl transition-all duration-300 relative">
                         <div className="flex justify-between items-start mb-6">
                             <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                                <Briefcase size={24} weight="duotone" />
+                                <UserSquare size={24} weight="duotone" />
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => handleEdit(project)}
                                     className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                                    title="Edit Project"
+                                    title="Edit Guest"
                                 >
                                     <Pencil size={18} weight="bold" />
                                 </button>
@@ -124,14 +124,14 @@ const Projects: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
                     <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
                         <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                            <h2 className="font-bold text-2xl">{editingProject ? 'Edit Project' : 'New Project'}</h2>
+                            <h2 className="font-bold text-2xl">{editingProject ? 'Edit Guest' : 'New Guest'}</h2>
                             <button onClick={handleCloseModal} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
                                 <Plus size={24} weight="bold" className="rotate-45" />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-8 space-y-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Name</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Guest Name</label>
                                 <input
                                     type="text"
                                     required
@@ -182,7 +182,7 @@ const Projects: React.FC = () => {
                                 {isSaving ? (
                                     <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                 ) : (
-                                    editingProject ? 'Update Project' : 'Create Project'
+                                    editingProject ? 'Update Guest' : 'Create Guest'
                                 )}
                             </button>
                         </form>
