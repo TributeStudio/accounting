@@ -3,11 +3,11 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
     SquaresFour,
     Timer,
-    Files,
-    Users,
+    CreditCard,
+    CirclesThreePlus,
+    Invoice,
     Gear,
-    SignOut,
-    Sparkle
+    SignOut
 } from '@phosphor-icons/react';
 import { useApp } from '../context/AppContext';
 
@@ -52,9 +52,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <nav className="flex-1 space-y-2">
                     <SidebarItem to="/dashboard" icon={SquaresFour} label="Dashboard" />
                     <SidebarItem to="/tracker" icon={Timer} label="Tracker" />
-                    <SidebarItem to="/ai-statement" icon={Sparkle} label="Statement AI" />
-                    <SidebarItem to="/invoices" icon={Files} label="Invoices" />
-                    <SidebarItem to="/projects" icon={Users} label="Projects" />
+                    <SidebarItem to="/statements" icon={CreditCard} label="CC Statements" />
+                    <SidebarItem to="/invoices" icon={Invoice} label="Invoices" />
+                    <SidebarItem to="/projects" icon={CirclesThreePlus} label="Projects" />
                 </nav>
 
                 <div className="pt-6 border-t border-white/5 space-y-2">
