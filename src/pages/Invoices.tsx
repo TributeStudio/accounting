@@ -351,7 +351,7 @@ const Invoices: React.FC = () => {
                                                 </td>
                                                 <td className="px-8 py-6">
                                                     <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider
-                                                        ${log.type === 'TIME' ? 'bg-indigo-50 text-indigo-600' : 'bg-pink-50 text-pink-600'}`}>
+                                                        ${log.type === 'TIME' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-black'}`}>
                                                         {log.type}
                                                     </span>
                                                 </td>
