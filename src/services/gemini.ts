@@ -10,7 +10,7 @@ if (API_KEY && API_KEY !== 'YOUR_API_KEY') {
 
 export const getGeminiModel = () => {
     if (!genAI) return null;
-    return genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    return genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 };
 
 export const processStatement = async (content: string) => {
