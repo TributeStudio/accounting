@@ -11,7 +11,8 @@ import {
     Briefcase,
     CaretRight,
     SkipForward,
-    Camera
+    Camera,
+    X
 } from '@phosphor-icons/react';
 
 interface ExtractedItem {
@@ -30,8 +31,32 @@ const Statements: React.FC = () => {
     const [extractedItems, setExtractedItems] = useState<ExtractedItem[]>([]);
     const [status, setStatus] = useState<string | null>(null);
     const [markupPercent, setMarkupPercent] = useState('20');
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const cameraInputRef = useRef<HTMLInputElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const streamRef = useRef<MediaStream | null>(null);
+
+    const processStatementData = async (base64: string, mimeType: string) => {
+        setStatus('Extracting data with AI...');
+        try {
+            const results = await processFile(base64, mimeType);
+            const items = results.map((item: any) => ({
+                ...item,
+                id: Math.random().toString(36).substr(2, 9),
+                selected: true,
+                status: 'pending' as const,
+                projectId: ''
+            }));
+            setExtractedItems(items);
+            setStatus(null);
+        } catch (error: any) {
+            console.error(error);
+            setStatus(`Error: ${error.message || 'Failed to process file'}`);
+        } finally {
+            setIsProcessing(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -42,28 +67,54 @@ const Statements: React.FC = () => {
 
         try {
             const base64 = await fileToBase64(file);
-            setStatus('Extracting data with AI...');
-            const results = await processFile(base64, file.type);
-
-            const items = results.map((item: any) => ({
-                ...item,
-                id: Math.random().toString(36).substr(2, 9),
-                selected: true,
-                status: 'pending' as const,
-                projectId: ''
-            }));
-
-            setExtractedItems(items);
-            setStatus(null);
+            await processStatementData(base64, file.type);
         } catch (error: any) {
             console.error(error);
-            setStatus(`Error: ${error.message || 'Failed to process file'}`);
-        } finally {
+            setStatus(`Error reading file`);
             setIsProcessing(false);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-            if (cameraInputRef.current) cameraInputRef.current.value = '';
         }
     };
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            streamRef.current = stream;
+            setIsCameraOpen(true);
+        } catch (err) {
+            console.error("Camera Error:", err);
+            alert("Unable to access camera. Please allow permissions.");
+        }
+    };
+
+    const closeCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        setIsCameraOpen(false);
+    };
+
+    const takePhoto = () => {
+        if (videoRef.current) {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0);
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                setIsProcessing(true);
+                processStatementData(base64, 'image/jpeg');
+                closeCamera();
+            }
+        }
+    };
+
+    React.useEffect(() => {
+        if (isCameraOpen && videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+        }
+    }, [isCameraOpen]);
 
     const fileToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -132,16 +183,8 @@ const Statements: React.FC = () => {
                         className="hidden"
                         accept=".pdf,image/*"
                     />
-                    <input
-                        type="file"
-                        ref={cameraInputRef}
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        accept="image/*"
-                        capture="environment"
-                    />
                     <button
-                        onClick={() => cameraInputRef.current?.click()}
+                        onClick={startCamera}
                         disabled={isProcessing}
                         className="bg-white text-slate-900 border border-slate-200 px-6 py-4 rounded-2xl font-bold flex items-center gap-3 hover:bg-slate-50 transition-all disabled:opacity-50 active:scale-95"
                     >
@@ -310,7 +353,7 @@ const Statements: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-3 justify-center">
                                     <button
-                                        onClick={() => cameraInputRef.current?.click()}
+                                        onClick={startCamera}
                                         className="bg-white border-2 border-slate-200 text-slate-900 px-8 py-3 rounded-2xl font-bold text-sm hover:border-slate-900 transition-all shadow-sm flex items-center gap-2"
                                     >
                                         <Camera size={18} weight="bold" />
@@ -340,7 +383,46 @@ const Statements: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+
+            {/* Camera Modal */}
+            {
+                isCameraOpen && (
+                    <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+                        <div className="bg-slate-900 rounded-3xl overflow-hidden max-w-lg w-full shadow-2xl border border-slate-800">
+                            <div className="relative aspect-[3/4] bg-black">
+                                <video
+                                    ref={videoRef}
+                                    autoPlay
+                                    playsInline
+                                    className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 border-[3px] border-white/20 m-8 rounded-xl pointer-events-none">
+                                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-400 -mt-[3px] -ml-[3px] rounded-tl-xl" />
+                                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-400 -mt-[3px] -mr-[3px] rounded-tr-xl" />
+                                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-emerald-400 -mb-[3px] -ml-[3px] rounded-bl-xl" />
+                                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-400 -mb-[3px] -mr-[3px] rounded-br-xl" />
+                                </div>
+                            </div>
+                            <div className="p-6 flex items-center justify-between gap-4">
+                                <button
+                                    onClick={closeCamera}
+                                    className="p-4 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition-colors"
+                                >
+                                    <X size={24} weight="bold" />
+                                </button>
+                                <button
+                                    onClick={takePhoto}
+                                    className="flex-1 bg-white text-slate-900 py-4 rounded-2xl font-bold text-lg hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Camera size={24} weight="fill" />
+                                    Capture
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
