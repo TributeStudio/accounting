@@ -7,7 +7,7 @@ import {
     Invoice,
     Gear,
     SignOut,
-    UserSquare
+    ArticleNyTimes
 } from '@phosphor-icons/react';
 import { useApp } from '../context/AppContext';
 import { COMPANY_CONFIG } from '../config/company';
@@ -55,7 +55,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     <SidebarItem to="/tracker" icon={Timer} label="Tracker" />
                     <SidebarItem to="/statements" icon={CreditCard} label="CC Statements" />
                     <SidebarItem to="/invoices" icon={Invoice} label="Invoices" />
-                    <SidebarItem to="/projects" icon={UserSquare} label="Guests" />
+                    <SidebarItem to="/projects" icon={ArticleNyTimes} label="Projects" />
                 </nav>
 
                 <div className="pt-6 border-t border-white/5 space-y-2">
