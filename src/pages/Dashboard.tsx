@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
                     <div className="space-y-6">
                         {logs.slice(0, 5).map((log) => (
                             <div key={log.id} className="flex gap-4">
-                                <div className={`w-2 mt-1.5 h-2 rounded-full flex-shrink-0 ${log.type === 'TIME' ? 'bg-sky-500' : 'bg-pink-500'}`} />
+                                <div className={`w-2 mt-1.5 h-2 rounded-full flex-shrink-0 ${log.type === 'TIME' ? 'bg-sky-500' : 'bg-slate-900'}`} />
                                 <div>
                                     <p className="text-sm font-medium text-slate-900">{log.description}</p>
                                     <p className="text-xs text-slate-500">
