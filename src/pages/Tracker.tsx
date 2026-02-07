@@ -263,7 +263,7 @@ const Tracker: React.FC = () => {
                                 <div key={log.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group">
                                     <div className="flex justify-between items-start mb-3">
                                         <div className={`p-2 rounded-lg ${log.type === 'TIME' ? 'bg-sky-50 text-sky-600' : 'bg-slate-50 text-black'}`}>
-                                            {log.type === 'TIME' ? <Clock size={20} weight="duotone" /> : <Tag size={20} weight="duotone" />}
+                                            {log.type === 'TIME' ? <Clock size={20} weight="duotone" /> : <Tag size={15} weight="fill" />}
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
