@@ -11,8 +11,11 @@ import {
     Trash,
     Crown,
     X,
-    Check
+    Check,
+    Bug // Import Bug icon
 } from '@phosphor-icons/react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 const Settings: React.FC = () => {
     const { logs, projects, isDemoMode, users, user, addUser, deleteUser } = useApp();
@@ -234,6 +237,54 @@ const Settings: React.FC = () => {
                         </div>
                         <div className="px-4 py-2 bg-slate-50 rounded-lg text-xs font-bold text-slate-500 flex items-center gap-2 border border-slate-100">
                             <Info size={14} weight="fill" className="text-sky-500" /> HIPAA Compliant
+                            {/* System Diagnostics */}
+                            <div className="p-8">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+                                        <Bug size={24} weight="duotone" />
+                                    </div>
+                                    <div>
+                                        <h2 className="font-bold text-lg">System Diagnostics</h2>
+                                        <p className="text-xs text-slate-400 uppercase tracking-widest font-sans font-bold">Troubleshooting</p>
+                                    </div>
+                                </div>
+                                <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+                                    If you believe data is missing, run this check to query the database directly.
+                                </p>
+                                <button
+                                    onClick={async () => {
+                                        if (!user) {
+                                            alert("You are not signed in.");
+                                            return;
+                                        }
+                                        try {
+                                            const projectsRef = collection(db, 'users', user.uid, 'projects');
+                                            const logsRef = collection(db, 'users', user.uid, 'logs');
+                                            const invoicesRef = collection(db, 'users', user.uid, 'invoices');
+
+                                            const [pSnap, lSnap, iSnap] = await Promise.all([
+                                                getDocs(projectsRef),
+                                                getDocs(logsRef),
+                                                getDocs(invoicesRef)
+                                            ]);
+
+                                            alert(
+                                                `Direct Database Check for User (${user.email}):\n\n` +
+                                                `Projects Found: ${pSnap.size}\n` +
+                                                `Logs Found: ${lSnap.size}\n` +
+                                                `Invoices Found: ${iSnap.size}\n\n` +
+                                                `User ID: ${user.uid}`
+                                            );
+                                        } catch (error: any) {
+                                            console.error(error);
+                                            alert(`Error checking database: ${error.message}`);
+                                        }
+                                    }}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold text-sm hover:bg-rose-100 transition-all border border-rose-100"
+                                >
+                                    <Bug size={18} weight="bold" /> Check Firebase Data
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
