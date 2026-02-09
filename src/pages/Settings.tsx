@@ -12,9 +12,10 @@ import {
     Crown,
     X,
     Check,
-    Bug // Import Bug icon
+    Bug, // Import Bug icon
+    MagnifyingGlass // Import MagnifyingGlass icon
 } from '@phosphor-icons/react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, collectionGroup } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 const Settings: React.FC = () => {
@@ -283,6 +284,66 @@ const Settings: React.FC = () => {
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-rose-50 text-rose-600 rounded-xl font-bold text-sm hover:bg-rose-100 transition-all border border-rose-100"
                                 >
                                     <Bug size={18} weight="bold" /> Check Firebase Data
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        if (!user) {
+                                            alert("Login required.");
+                                            return;
+                                        }
+                                        const isConfirmed = confirm("This will scan the ENTIRE database for all users. Continue?");
+                                        if (!isConfirmed) return;
+
+                                        try {
+                                            // Use collectionGroup to find ANY collection named 'projects', 'logs', etc.
+                                            const allProjects = await getDocs(collectionGroup(db, 'projects'));
+                                            const allLogs = await getDocs(collectionGroup(db, 'logs'));
+                                            const allInvoices = await getDocs(collectionGroup(db, 'invoices'));
+
+                                            let report = `GLOBAL SCAN REPORT:\n\n`;
+                                            report += `Total Projects: ${allProjects.size}\n`;
+                                            report += `Total Logs: ${allLogs.size}\n`;
+                                            report += `Total Invoices: ${allInvoices.size}\n\n`;
+
+                                            if (allProjects.size > 0 || allLogs.size > 0 || allInvoices.size > 0) {
+                                                report += "Data found under these User IDs:\n";
+                                                const userMap = new Set();
+
+                                                allProjects.docs.forEach(d => {
+                                                    // Path is usually: users/{uid}/projects/{projectId}
+                                                    const segments = d.ref.path.split('/');
+                                                    if (segments.length >= 3 && segments[0] === 'users') {
+                                                        userMap.add(segments[1]);
+                                                    }
+                                                });
+                                                allLogs.docs.forEach(d => {
+                                                    const segments = d.ref.path.split('/');
+                                                    if (segments.length >= 3 && segments[0] === 'users') {
+                                                        userMap.add(segments[1]);
+                                                    }
+                                                });
+
+                                                Array.from(userMap).forEach(uid => {
+                                                    report += `- ${uid}\n`;
+                                                });
+                                            } else {
+                                                report += "No data found anywhere in the system.";
+                                            }
+
+                                            alert(report);
+
+                                        } catch (error: any) {
+                                            console.error("Deep scan failed:", error);
+                                            if (error.code === 'permission-denied') {
+                                                alert("Scan Failed: You do not have permission to view other users' data.");
+                                            } else {
+                                                alert(`Scan Error: ${error.message}`);
+                                            }
+                                        }
+                                    }}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-all border border-slate-900 ml-4"
+                                >
+                                    <MagnifyingGlass size={18} weight="bold" /> Scan Entire Database (Admin)
                                 </button>
                             </div>
                         </div>
