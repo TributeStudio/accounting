@@ -145,7 +145,7 @@ const Clients: React.FC = () => {
                                 </div>
                             )}
                             <div className="flex items-center gap-3 text-sm text-slate-600">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest w-4">Rate</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-4">Rate</span>
                                 <span className="font-bold">${client.defaultRate}/hr</span>
                             </div>
                         </div>
