@@ -53,7 +53,7 @@ const Clients: React.FC = () => {
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         // 1. Validate Inputs
@@ -65,53 +65,36 @@ const Clients: React.FC = () => {
 
         setIsSaving(true);
 
-        // 2. Setup Watchdog Timeout
-        let isTimedOut = false;
-        const watchdog = setTimeout(() => {
-            isTimedOut = true;
-            setIsSaving(false);
-            alert("Request timed out. Please check your connection.");
-        }, 8000);
+        // 2. Fire and forget (Optimistic Update)
+        const savePromise = editingClient
+            ? updateClient(editingClient.id, {
+                name: formData.name,
+                contactPerson: formData.contactPerson,
+                email: formData.email,
+                phone: formData.phone,
+                address: formData.address,
+                defaultRate: rate,
+                status: formData.status
+            })
+            : addClient({
+                name: formData.name,
+                contactPerson: formData.contactPerson,
+                email: formData.email,
+                phone: formData.phone,
+                address: formData.address,
+                defaultRate: rate,
+                status: formData.status
+            });
 
-        try {
-            // 3. Perform Operation
-            if (editingClient) {
-                await updateClient(editingClient.id, {
-                    name: formData.name,
-                    contactPerson: formData.contactPerson,
-                    email: formData.email,
-                    phone: formData.phone,
-                    address: formData.address,
-                    defaultRate: rate,
-                    status: formData.status
-                });
-            } else {
-                await addClient({
-                    name: formData.name,
-                    contactPerson: formData.contactPerson,
-                    email: formData.email,
-                    phone: formData.phone,
-                    address: formData.address,
-                    defaultRate: rate,
-                    status: formData.status
-                });
-            }
+        // 3. Background Error Handling
+        savePromise.catch((error) => {
+            console.error('Background save error:', error);
+            alert(`Warning: The client could not be synced to the cloud: ${error.message}`);
+        });
 
-            // 4. Success handling
-            clearTimeout(watchdog);
-            if (!isTimedOut) {
-                setIsSaving(false);
-                handleCloseModal();
-            }
-        } catch (error: any) {
-            // 5. Error handling
-            clearTimeout(watchdog);
-            if (!isTimedOut) {
-                console.error('Submit error:', error);
-                setIsSaving(false);
-                alert(`Failed to save: ${error.message}`);
-            }
-        }
+        // 4. Close immediately
+        setIsSaving(false);
+        handleCloseModal();
     };
 
     return (

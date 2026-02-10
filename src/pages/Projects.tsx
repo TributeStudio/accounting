@@ -33,7 +33,7 @@ const Projects: React.FC = () => {
         setFormData({ name: '', client: '', hourlyRate: '150', status: 'ACTIVE' });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         // 1. Validate Inputs
@@ -45,47 +45,32 @@ const Projects: React.FC = () => {
 
         setIsSaving(true);
 
-        // 2. Setup Watchdog Timeout (Safety Net)
-        let isTimedOut = false;
-        const watchdog = setTimeout(() => {
-            isTimedOut = true;
-            setIsSaving(false);
-            alert("Request timed out. Please check your connection.");
-        }, 8000);
+        // 2. Fire and forget (Optimistic Update)
+        // We do NOT await this. Firestore handles local updates immediately.
+        const savePromise = editingProject
+            ? updateProject(editingProject.id, {
+                name: formData.name,
+                client: formData.client,
+                hourlyRate: rate,
+                status: formData.status
+            })
+            : addProject({
+                name: formData.name,
+                client: formData.client,
+                hourlyRate: rate,
+                status: formData.status
+            });
 
-        try {
-            // 3. Perform Operation
-            if (editingProject) {
-                await updateProject(editingProject.id, {
-                    name: formData.name,
-                    client: formData.client,
-                    hourlyRate: rate,
-                    status: formData.status
-                });
-            } else {
-                await addProject({
-                    name: formData.name,
-                    client: formData.client,
-                    hourlyRate: rate,
-                    status: formData.status
-                });
-            }
+        // 3. Background Error Handling
+        savePromise.catch((error) => {
+            console.error('Background save error:', error);
+            // Since the modal is likely closed, we alert the user
+            alert(`Warning: The project could not be synced to the cloud: ${error.message}`);
+        });
 
-            // 4. Success handling (only if not timed out)
-            clearTimeout(watchdog);
-            if (!isTimedOut) {
-                setIsSaving(false);
-                handleCloseModal();
-            }
-        } catch (error: any) {
-            // 5. Error handling
-            clearTimeout(watchdog);
-            if (!isTimedOut) {
-                console.error('Submit error:', error);
-                setIsSaving(false);
-                alert(`Failed to save: ${error.message}`);
-            }
-        }
+        // 4. Close immediately
+        setIsSaving(false);
+        handleCloseModal();
     };
 
     return (
