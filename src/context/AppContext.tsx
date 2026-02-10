@@ -367,6 +367,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await updateDoc(doc(db, 'users', state.user.uid, 'projects', id), updates);
         } catch (error: any) {
             console.error('Firestore Update Project Error:', error);
+            throw error; // Re-throw so component handles it
         }
     };
 

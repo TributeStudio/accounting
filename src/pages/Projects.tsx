@@ -55,6 +55,7 @@ const Projects: React.FC = () => {
             handleCloseModal();
         } catch (error) {
             console.error('Submit handle error:', error);
+            alert("Failed to save project. Please try again.");
         } finally {
             setIsSaving(false);
         }
