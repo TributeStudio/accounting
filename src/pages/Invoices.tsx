@@ -535,18 +535,52 @@ const Invoices: React.FC = () => {
                                     <tbody className="divide-y divide-slate-100 text-[11px]">
                                         {filteredLogs.map((log) => {
                                             const project = projects.find(p => p.id === log.projectId);
-                                            const amount = log.type === 'TIME' ? (log.hours! * project!.hourlyRate) : log.billableAmount!;
+                                            const amount = log.type === 'TIME' ? (log.hours! * project!.hourlyRate) : (log.billableAmount || 0);
+
+                                            // Formatting description based on type
+                                            let description = log.description;
+                                            let subDescription = '';
+
+                                            if (log.type === 'MEDIA_SPEND' && log.mediaDetails) {
+                                                description = `Media Management Fees - ${log.mediaDetails.billingMonth}`;
+                                                subDescription = (
+                                                    <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
+                                                        <div>Google Spend: ${log.mediaDetails.googleSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                        <div>Meta Spend: ${log.mediaDetails.metaSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                        <div className="text-slate-400 italic">Annual Run Rate: ${log.mediaDetails.annualSpendRunningTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                    </div>
+                                                ) as any; // Cast avoid weird type issues if string expected generally
+                                            } else {
+                                                subDescription = <span className="text-slate-500">{log.description}</span> as any;
+                                            }
+
                                             return (
                                                 <tr key={log.id}>
                                                     <td className="py-2 pr-4 align-top">
                                                         <span className="font-bold block text-slate-900">{project?.name}</span>
-                                                        <span className="text-slate-500">{log.description}</span>
+                                                        {log.type === 'MEDIA_SPEND' ? (
+                                                            <>
+                                                                <span className="font-medium text-slate-900">{description}</span>
+                                                                {subDescription}
+                                                            </>
+                                                        ) : (
+                                                            <span className="text-slate-500">{description}</span>
+                                                        )}
                                                     </td>
                                                     <td className="py-2 text-center align-top text-slate-500">
                                                         {log.type === 'TIME' ? log.hours : '1'}
                                                     </td>
                                                     <td className="py-2 text-right align-top text-slate-500">
-                                                        ${log.type === 'TIME' ? project?.hourlyRate : log.cost}
+                                                        {/* Unit Price Display Logic */}
+                                                        {log.type === 'TIME' ? `$${project?.hourlyRate}` :
+                                                            log.type === 'MEDIA_SPEND' ? '-' :
+                                                                `$${log.cost}`}
+
+                                                        {log.type === 'MEDIA_SPEND' && (
+                                                            <div className="text-[9px] text-slate-400 mt-1">
+                                                                Tier Breaks Applied
+                                                            </div>
+                                                        )}
                                                     </td>
                                                     <td className="py-2 text-right align-top font-bold text-slate-900">
                                                         ${amount.toFixed(2)}
