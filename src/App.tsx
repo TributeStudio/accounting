@@ -9,6 +9,8 @@ import Invoices from './pages/Invoices';
 import Projects from './pages/Projects';
 import Settings from './pages/Settings';
 
+import Clients from './pages/Clients';
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isDemoMode, isLoading } = useApp();
 
@@ -33,6 +35,7 @@ function App() {
         <Route path="/statements" element={<ProtectedRoute><Statements /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute><Invoices /></ProtectedRoute>} />
         <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+        <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       </Routes>
     </Router>

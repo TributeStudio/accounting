@@ -57,9 +57,22 @@ export interface Invoice {
   createdAt: number;
 }
 
+export interface Client {
+  id: string;
+  name: string;
+  address: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  defaultRate: number;
+  status: 'ACTIVE' | 'ARCHIVED';
+  createdAt: number;
+}
+
 export interface AppState {
   user: User | null;
   users: User[];
+  clients: Client[];
   projects: Project[];
   logs: LogItem[];
   invoices: Invoice[]; // New

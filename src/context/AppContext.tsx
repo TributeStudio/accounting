@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { Project, LogItem, AppState, Invoice } from '../types';
+import type { Project, LogItem, AppState, Invoice, Client } from '../types';
 import { MOCK_PROJECTS, MOCK_LOGS } from '../utils/mockData';
 import { auth, db, isConfigValid } from '../services/firebase';
 import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut, GoogleAuthProvider } from 'firebase/auth';
@@ -14,6 +14,9 @@ interface AppContextType extends AppState {
     updateLog: (id: string, updates: Partial<LogItem>) => Promise<void>;
     deleteLog: (id: string) => Promise<void>;
     updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+    addClient: (client: Omit<Client, 'id' | 'createdAt'>) => Promise<void>;
+    updateClient: (id: string, updates: Partial<Client>) => Promise<void>;
+    deleteClient: (id: string) => Promise<void>;
     addUser: (email: string, role: 'admin' | 'user') => Promise<void>;
     deleteUser: (id: string) => Promise<void>;
     addInvoice: (invoice: Omit<Invoice, 'id' | 'createdAt'>) => Promise<void>;
@@ -28,6 +31,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         user: null,
         users: [],
         projects: [],
+        clients: [],
         logs: [],
         invoices: [],
         isDemoMode: localStorage.getItem('demoMode') === 'true',
@@ -91,6 +95,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     }
                 );
 
+                const unsubClients = onSnapshot(
+                    query(collection(db, 'users', user.uid, 'clients'), orderBy('createdAt', 'desc')),
+                    (snapshot) => {
+                        const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client));
+                        setState(prev => ({ ...prev, clients }));
+                    },
+                    (error) => {
+                        console.error("Error syncing clients:", error);
+                    }
+                );
+
                 const unsubLogs = onSnapshot(
                     query(collection(db, 'users', user.uid, 'logs'), orderBy('createdAt', 'desc')),
                     (snapshot) => {
@@ -117,6 +132,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     unsubUserMeta();
                     unsubUsers();
                     unsubProjects();
+                    unsubClients();
                     unsubLogs();
                     unsubInvoices();
                 };
@@ -124,6 +140,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 // NO REAL USER - Check if we should be in Demo Mode
                 if (state.isDemoMode) {
                     const savedProjects = localStorage.getItem('tribute_projects');
+                    const savedClients = localStorage.getItem('tribute_clients');
                     const savedLogs = localStorage.getItem('tribute_logs');
                     const savedInvoices = localStorage.getItem('tribute_invoices');
 
@@ -135,6 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             { uid: 'user-2', email: 'assistant@tribute.studio', displayName: 'Studio Assistant', photoURL: null, role: 'user' }
                         ],
                         projects: savedProjects ? JSON.parse(savedProjects) : MOCK_PROJECTS,
+                        clients: savedClients ? JSON.parse(savedClients) : [],
                         logs: savedLogs ? JSON.parse(savedLogs) : MOCK_LOGS,
                         invoices: savedInvoices ? JSON.parse(savedInvoices) : [],
                         isLoading: false,
@@ -152,10 +170,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     useEffect(() => {
         if (state.isDemoMode && !state.isLoading) {
             localStorage.setItem('tribute_projects', JSON.stringify(state.projects));
+            localStorage.setItem('tribute_clients', JSON.stringify(state.clients));
             localStorage.setItem('tribute_logs', JSON.stringify(state.logs));
             localStorage.setItem('tribute_invoices', JSON.stringify(state.invoices));
         }
-    }, [state.projects, state.logs, state.invoices, state.isDemoMode, state.isLoading]);
+    }, [state.projects, state.clients, state.logs, state.invoices, state.isDemoMode, state.isLoading]);
 
     const enterDemoMode = () => {
         localStorage.setItem('demoMode', 'true');
@@ -234,6 +253,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     alert('Save Failed: You do not have permission to create projects.');
                 }
             });
+    };
+
+    const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
+        const newClient = { ...clientData, createdAt: Date.now() };
+
+        if (state.isDemoMode) {
+            setState(prev => ({
+                ...prev,
+                clients: [{ ...newClient, id: Math.random().toString(36).substring(2, 11) }, ...prev.clients]
+            }));
+            return;
+        }
+
+        if (!state.user) {
+            alert('Cannot save client: Login required.');
+            return;
+        }
+
+        addDoc(collection(db, 'users', state.user.uid, 'clients'), newClient)
+            .then(() => console.log('Client saved'))
+            .catch((error) => {
+                console.error('Firestore Add Client Error:', error);
+                alert(`Save failed: ${error.message}`);
+            });
+    };
+
+    const updateClient = async (id: string, updates: Partial<Client>) => {
+        if (state.isDemoMode) {
+            setState(prev => ({
+                ...prev,
+                clients: prev.clients.map(c => c.id === id ? { ...c, ...updates } : c)
+            }));
+            return;
+        }
+
+        if (!state.user) return;
+        try {
+            await updateDoc(doc(db, 'users', state.user.uid, 'clients', id), updates);
+        } catch (error: any) {
+            console.error('Firestore Update Client Error:', error);
+        }
+    };
+
+    const deleteClient = async (id: string) => {
+        if (state.isDemoMode) {
+            setState(prev => ({ ...prev, clients: prev.clients.filter(c => c.id !== id) }));
+        } else if (state.user) {
+            await deleteDoc(doc(db, 'users', state.user.uid, 'clients', id));
+        }
     };
 
     const addLog = async (logData: Omit<LogItem, 'id' | 'createdAt'>) => {
@@ -409,6 +477,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             updateLog,
             deleteLog,
             updateProject,
+            addClient,
+            updateClient,
+            deleteClient,
             addUser,
             deleteUser,
             addInvoice,

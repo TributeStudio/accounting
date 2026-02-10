@@ -4,7 +4,7 @@ import { Plus, UserSquare, User, Pencil } from '@phosphor-icons/react';
 import type { Project } from '../types';
 
 const Projects: React.FC = () => {
-    const { projects, addProject, updateProject } = useApp();
+    const { projects, clients, addProject, updateProject } = useApp();
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [formData, setFormData] = useState({
@@ -124,14 +124,14 @@ const Projects: React.FC = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">
                     <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
                         <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                            <h2 className="font-bold text-2xl">{editingProject ? 'Edit Guest' : 'New Guest'}</h2>
+                            <h2 className="font-bold text-2xl">{editingProject ? 'Edit Project' : 'Project'}</h2>
                             <button onClick={handleCloseModal} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
                                 <Plus size={24} weight="bold" className="rotate-45" />
                             </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-8 space-y-6">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Guest Name</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Name</label>
                                 <input
                                     type="text"
                                     required
@@ -143,14 +143,38 @@ const Projects: React.FC = () => {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Client Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="e.g. Acme Corp"
-                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
-                                    value={formData.client}
-                                    onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                                />
+                                <div className="relative">
+                                    <select
+                                        required
+                                        className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900 appearance-none"
+                                        value={formData.client}
+                                        onChange={(e) => {
+                                            const selectedClient = clients.find(c => c.name === e.target.value);
+                                            setFormData({
+                                                ...formData,
+                                                client: e.target.value,
+                                                hourlyRate: selectedClient ? selectedClient.defaultRate.toString() : formData.hourlyRate
+                                            });
+                                        }}
+                                    >
+                                        <option value="">Select a Client</option>
+                                        {clients
+                                            .filter(c => c.status === 'ACTIVE' || c.name === formData.client)
+                                            .map(client => (
+                                                <option key={client.id} value={client.name}>
+                                                    {client.name}
+                                                </option>
+                                            ))}
+                                    </select>
+                                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
+                                        <User size={16} weight="bold" />
+                                    </div>
+                                </div>
+                                {clients.length === 0 && (
+                                    <p className="text-xs text-rose-500 mt-1">
+                                        No active clients found. Please add a client in the <a href="/clients" className="underline font-bold">Clients</a> page first.
+                                    </p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hourly Rate ($)</label>
@@ -182,7 +206,7 @@ const Projects: React.FC = () => {
                                 {isSaving ? (
                                     <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                                 ) : (
-                                    editingProject ? 'Update Guest' : 'Create Guest'
+                                    editingProject ? 'Update Project' : 'Create Project'
                                 )}
                             </button>
                         </form>
