@@ -56,7 +56,8 @@ const Clients: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
-        try {
+
+        const performSave = async () => {
             if (editingClient) {
                 await updateClient(editingClient.id, {
                     name: formData.name,
@@ -78,11 +79,20 @@ const Clients: React.FC = () => {
                     status: formData.status
                 });
             }
-            handleCloseModal();
-        } catch (error) {
-            console.error('Submit handle error:', error);
-        } finally {
+        };
+
+        const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Operation timed out')), 10000);
+        });
+
+        try {
+            await Promise.race([performSave(), timeout]);
             setIsSaving(false);
+            handleCloseModal();
+        } catch (error: any) {
+            console.error('Submit error:', error);
+            setIsSaving(false);
+            alert(`Failed to save: ${error.message || 'Unknown error'}`);
         }
     };
 

@@ -273,12 +273,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        addDoc(collection(db, 'users', state.user.uid, 'clients'), newClient)
-            .then(() => console.log('Client saved'))
-            .catch((error) => {
-                console.error('Firestore Add Client Error:', error);
-                alert(`Save failed: ${error.message}`);
-            });
+        try {
+            const docRef = await addDoc(collection(db, 'users', state.user.uid, 'clients'), newClient);
+            console.log('Client saved:', docRef.id);
+        } catch (error: any) {
+            console.error('Firestore Add Client Error:', error);
+            throw error;
+        }
     };
 
     const updateClient = async (id: string, updates: Partial<Client>) => {
@@ -295,6 +296,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await updateDoc(doc(db, 'users', state.user.uid, 'clients', id), updates);
         } catch (error: any) {
             console.error('Firestore Update Client Error:', error);
+            throw error;
         }
     };
 
@@ -302,7 +304,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (state.isDemoMode) {
             setState(prev => ({ ...prev, clients: prev.clients.filter(c => c.id !== id) }));
         } else if (state.user) {
-            await deleteDoc(doc(db, 'users', state.user.uid, 'clients', id));
+            try {
+                await deleteDoc(doc(db, 'users', state.user.uid, 'clients', id));
+            } catch (error: any) {
+                console.error('Firestore Delete Client Error:', error);
+                throw error;
+            }
         }
     };
 
@@ -322,19 +329,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        addDoc(collection(db, 'users', state.user.uid, 'logs'), newLog)
-            .then(() => console.log('Log synced to server'))
-            .catch((error) => {
-                console.error('Firestore Add Log Error:', error);
-                alert(`Error syncing log: ${error.message}`);
-            });
+        try {
+            await addDoc(collection(db, 'users', state.user.uid, 'logs'), newLog);
+            console.log('Log synced to server');
+        } catch (error: any) {
+            console.error('Firestore Add Log Error:', error);
+            throw error;
+        }
     };
 
     const deleteLog = async (id: string) => {
         if (state.isDemoMode) {
             setState(prev => ({ ...prev, logs: prev.logs.filter(l => l.id !== id) }));
         } else if (state.user) {
-            await deleteDoc(doc(db, 'users', state.user.uid, 'logs', id));
+            try {
+                await deleteDoc(doc(db, 'users', state.user.uid, 'logs', id));
+            } catch (error: any) {
+                console.error('Firestore Delete Log Error:', error);
+                throw error;
+            }
         }
     };
 
@@ -352,6 +365,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await updateDoc(doc(db, 'users', state.user.uid, 'logs', id), updates);
         } catch (error: any) {
             console.error('Firestore Update Log Error:', error);
+            throw error;
         }
     };
 
@@ -369,7 +383,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await updateDoc(doc(db, 'users', state.user.uid, 'projects', id), updates);
         } catch (error: any) {
             console.error('Firestore Update Project Error:', error);
-            throw error; // Re-throw so component handles it
+            throw error;
         }
     };
 
@@ -389,11 +403,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        addDoc(collection(db, 'users', state.user.uid, 'invoices'), newInvoice)
-            .catch((error) => {
-                console.error('Firestore Add Invoice Error:', error);
-                alert(`Error saving invoice: ${error.message}`);
-            });
+        try {
+            await addDoc(collection(db, 'users', state.user.uid, 'invoices'), newInvoice);
+        } catch (error: any) {
+            console.error('Firestore Add Invoice Error:', error);
+            throw error;
+        }
     };
 
     const updateInvoice = async (id: string, updates: Partial<Invoice>) => {
@@ -410,7 +425,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             await updateDoc(doc(db, 'users', state.user.uid, 'invoices', id), updates);
         } catch (error: any) {
             console.error('Firestore Update Invoice Error:', error);
-            alert(`Error updating invoice: ${error.message}`);
+            throw error;
         }
     };
 
@@ -418,12 +433,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (state.isDemoMode) {
             setState(prev => ({ ...prev, invoices: prev.invoices.filter(i => i.id !== id) }));
         } else if (state.user) {
-            await deleteDoc(doc(db, 'users', state.user.uid, 'invoices', id));
+            try {
+                await deleteDoc(doc(db, 'users', state.user.uid, 'invoices', id));
+            } catch (error: any) {
+                console.error('Firestore Delete Invoice Error:', error);
+                throw error;
+            }
         }
     };
 
     const addUser = async (email: string, role: 'admin' | 'user') => {
         if (state.isDemoMode) {
+            // ... existing demo logic ...
             const newUser = {
                 uid: Math.random().toString(36).substring(2, 11),
                 email,
@@ -438,6 +459,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } else if (state.user) {
             const normalizedEmail = email.toLowerCase();
             const id = normalizedEmail.replace(/[.@]/g, '_');
+            // ... existing logic ...
             const newUser = {
                 uid: id,
                 email: normalizedEmail,
@@ -449,11 +471,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             setState(prev => ({ ...prev, users: [...prev.users, newUser] }));
 
-            setDoc(doc(db, 'users_metadata', id), { email: normalizedEmail, role, createdAt: Date.now() })
-                .catch((error) => {
-                    console.error('Error adding user:', error);
-                    setState(prev => ({ ...prev, users: prev.users.filter(u => u.uid !== id) }));
-                });
+            try {
+                await setDoc(doc(db, 'users_metadata', id), { email: normalizedEmail, role, createdAt: Date.now() });
+            } catch (error: any) {
+                console.error('Error adding user:', error);
+                setState(prev => ({ ...prev, users: prev.users.filter(u => u.uid !== id) }));
+                throw error;
+            }
         }
     };
 
@@ -462,10 +486,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setState(prev => ({ ...prev, users: prev.users.filter(u => u.uid !== id) }));
         } else if (state.user) {
             setState(prev => ({ ...prev, users: prev.users.filter(u => u.uid !== id) }));
-            deleteDoc(doc(db, 'users_metadata', id))
-                .catch((error) => {
-                    console.error('Error deleting user:', error);
-                });
+            try {
+                await deleteDoc(doc(db, 'users_metadata', id));
+            } catch (error: any) {
+                console.error('Error deleting user:', error);
+                throw error;
+            }
         }
     };
 
