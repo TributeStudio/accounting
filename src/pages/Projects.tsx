@@ -37,7 +37,7 @@ const Projects: React.FC = () => {
         e.preventDefault();
         setIsSaving(true);
 
-        try {
+        const performSave = async () => {
             if (editingProject) {
                 await updateProject(editingProject.id, {
                     name: formData.name,
@@ -53,12 +53,20 @@ const Projects: React.FC = () => {
                     status: formData.status
                 });
             }
+        };
+
+        const timeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Operation timed out')), 10000);
+        });
+
+        try {
+            await Promise.race([performSave(), timeout]);
             setIsSaving(false);
             handleCloseModal();
         } catch (error: any) {
-            console.error('Submit handle error:', error);
-            alert(`Failed to save project: ${error.message || 'Unknown error'}`);
-            setIsSaving(false);
+            console.error('Submit error:', error);
+            setIsSaving(false); // Stop loading first
+            alert(`Failed to save: ${error.message || 'Unknown error'}`);
         }
     };
 
