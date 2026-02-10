@@ -64,14 +64,14 @@ const Projects: React.FC = () => {
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold text-slate-900 mb-2">Guests Portfolio</h1>
+                    <h1 className="text-4xl font-bold text-slate-900 mb-2">Projects</h1>
                     <p className="text-slate-500">Manage your clients and active engagements.</p>
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
                     className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg"
                 >
-                    <Plus size={18} weight="bold" /> New Guest
+                    <Plus size={18} weight="bold" /> Project
                 </button>
             </div>
 
