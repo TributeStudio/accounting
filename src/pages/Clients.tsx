@@ -14,7 +14,10 @@ const Clients: React.FC = () => {
         phone: '',
         address: '',
         defaultRate: '150',
-        status: 'ACTIVE' as 'ACTIVE' | 'ARCHIVED'
+        status: 'ACTIVE' as 'ACTIVE' | 'ARCHIVED',
+        retainerAmount: '',
+        mediaManagementFee: '',
+        adminFeePercentage: ''
     });
 
     const [isSaving, setIsSaving] = useState(false);
@@ -28,7 +31,10 @@ const Clients: React.FC = () => {
             phone: client.phone,
             address: client.address,
             defaultRate: client.defaultRate.toString(),
-            status: client.status
+            status: client.status,
+            retainerAmount: client.billingSettings?.retainerAmount?.toString() || '',
+            mediaManagementFee: client.billingSettings?.mediaManagementFee?.toString() || '',
+            adminFeePercentage: client.billingSettings?.adminFeePercentage?.toString() || ''
         });
         setShowAddModal(true);
     };
@@ -49,7 +55,10 @@ const Clients: React.FC = () => {
             phone: '',
             address: '',
             defaultRate: '150',
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            retainerAmount: '',
+            mediaManagementFee: '',
+            adminFeePercentage: ''
         });
     };
 
@@ -65,6 +74,12 @@ const Clients: React.FC = () => {
 
         setIsSaving(true);
 
+        const billingSettings = {
+            retainerAmount: formData.retainerAmount ? Number(formData.retainerAmount) : undefined,
+            mediaManagementFee: formData.mediaManagementFee ? Number(formData.mediaManagementFee) : undefined,
+            adminFeePercentage: formData.adminFeePercentage ? Number(formData.adminFeePercentage) : undefined
+        };
+
         // 2. Fire and forget (Optimistic Update)
         const savePromise = editingClient
             ? updateClient(editingClient.id, {
@@ -74,7 +89,8 @@ const Clients: React.FC = () => {
                 phone: formData.phone,
                 address: formData.address,
                 defaultRate: rate,
-                status: formData.status
+                status: formData.status,
+                billingSettings
             })
             : addClient({
                 name: formData.name,
@@ -83,7 +99,8 @@ const Clients: React.FC = () => {
                 phone: formData.phone,
                 address: formData.address,
                 defaultRate: rate,
-                status: formData.status
+                status: formData.status,
+                billingSettings
             });
 
         // 3. Background Error Handling
@@ -239,6 +256,42 @@ const Clients: React.FC = () => {
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                 />
+                            </div>
+
+                            <div className="p-4 bg-slate-50 rounded-xl space-y-4">
+                                <h3 className="text-sm font-bold text-slate-900">Advanced Billing Settings</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Monthly Retainer ($)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="0.00"
+                                            className="w-full bg-white border-none rounded-xl px-4 py-2 text-slate-900 focus:ring-2 focus:ring-slate-900 text-sm"
+                                            value={formData.retainerAmount}
+                                            onChange={(e) => setFormData({ ...formData, retainerAmount: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Media Markup (%)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="15"
+                                            className="w-full bg-white border-none rounded-xl px-4 py-2 text-slate-900 focus:ring-2 focus:ring-slate-900 text-sm"
+                                            value={formData.mediaManagementFee}
+                                            onChange={(e) => setFormData({ ...formData, mediaManagementFee: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Admin/Expense Fee (%)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="3"
+                                            className="w-full bg-white border-none rounded-xl px-4 py-2 text-slate-900 focus:ring-2 focus:ring-slate-900 text-sm"
+                                            value={formData.adminFeePercentage}
+                                            onChange={(e) => setFormData({ ...formData, adminFeePercentage: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="space-y-2">

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk } from '@phosphor-icons/react';
-import type { LogItem } from '../types';
+import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Megaphone } from '@phosphor-icons/react';
+import type { LogItem, LogType } from '../types';
 
 const Tracker: React.FC = () => {
-    const { projects, logs, addLog, updateLog, deleteLog } = useApp();
-    const [activeTab, setActiveTab] = useState<'TIME' | 'EXPENSE'>('TIME');
+    const { projects, clients, logs, addLog, updateLog, deleteLog } = useApp();
+    const [activeTab, setActiveTab] = useState<LogType>('TIME');
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
@@ -16,16 +16,33 @@ const Tracker: React.FC = () => {
         description: '',
         hours: '',
         cost: '',
+        amount: '', // For Fixed Fee / Media Spend input
         markupPercent: '20',
     });
 
-    const billableAmount = activeTab === 'EXPENSE'
-        ? (Number(formData.cost) * (1 + Number(formData.markupPercent) / 100))
-        : 0;
+    // Helper to get client settings for the selected project
+    const selectedProject = projects.find(p => p.id === formData.projectId);
+    const selectedClient = selectedProject ? clients.find(c => c.name === selectedProject.client) : null;
 
-    const profit = activeTab === 'EXPENSE'
-        ? (billableAmount - Number(formData.cost))
-        : 0;
+    // Calculate Financials
+    let billableAmount = 0;
+    let profit = 0;
+
+    if (activeTab === 'EXPENSE') {
+        const cost = Number(formData.cost);
+        const markup = Number(formData.markupPercent);
+        billableAmount = cost * (1 + markup / 100);
+        profit = billableAmount - cost;
+    } else if (activeTab === 'FIXED_FEE') {
+        billableAmount = Number(formData.amount);
+        profit = billableAmount; // Assumed 100% profit usually, or we could track internal cost if needed
+    } else if (activeTab === 'MEDIA_SPEND') {
+        const spend = Number(formData.amount);
+        // Use client specific media fee or default to 15%
+        const mediaFeePercent = selectedClient?.billingSettings?.mediaManagementFee || 15;
+        billableAmount = spend * (mediaFeePercent / 100);
+        profit = billableAmount; // The fee is the profit. Valid assumption for now.
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,11 +59,20 @@ const Tracker: React.FC = () => {
 
             if (activeTab === 'TIME') {
                 logData.hours = Number(formData.hours);
-            } else {
+            } else if (activeTab === 'EXPENSE') {
                 logData.cost = Number(formData.cost);
                 logData.markupPercent = Number(formData.markupPercent);
                 logData.billableAmount = billableAmount;
                 logData.profit = profit;
+            } else if (activeTab === 'FIXED_FEE') {
+                logData.amount = Number(formData.amount);
+                logData.billableAmount = billableAmount;
+                logData.profit = profit;
+            } else if (activeTab === 'MEDIA_SPEND') {
+                logData.cost = Number(formData.amount); // Store spend as cost
+                logData.billableAmount = billableAmount; // Store fee as billable
+                logData.profit = profit;
+                logData.markupPercent = selectedClient?.billingSettings?.mediaManagementFee || 15;
             }
 
             if (editingLogId) {
@@ -73,11 +99,9 @@ const Tracker: React.FC = () => {
             description: '',
             hours: '',
             cost: '',
+            amount: '',
             markupPercent: '20',
         });
-        if (!editingLogId) {
-            // only scroll if not editing
-        }
     };
 
     const handleEdit = (log: LogItem) => {
@@ -89,6 +113,7 @@ const Tracker: React.FC = () => {
             description: log.description,
             hours: log.hours?.toString() || '',
             cost: log.cost?.toString() || '',
+            amount: (log.type === 'FIXED_FEE' ? log.billableAmount : log.cost)?.toString() || '',
             markupPercent: log.markupPercent?.toString() || '20',
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -112,21 +137,21 @@ const Tracker: React.FC = () => {
                 <div className="lg:col-span-3 bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden sticky top-8">
                     {/* Tabs */}
                     {!editingLogId && (
-                        <div className="flex border-b border-slate-100">
-                            <button
-                                onClick={() => setActiveTab('TIME')}
-                                className={`flex-1 py-4 font-medium text-sm flex items-center justify-center gap-2 transition-all
-                                ${activeTab === 'TIME' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                            >
-                                <Clock size={16} weight="duotone" /> Billable Hours
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('EXPENSE')}
-                                className={`flex-1 py-4 font-medium text-sm flex items-center justify-center gap-2 transition-all
-                                ${activeTab === 'EXPENSE' ? 'bg-slate-900 text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                            >
-                                <Tag size={16} weight="duotone" /> Project Expense
-                            </button>
+                        <div className="flex flex-wrap border-b border-slate-100">
+                            {(['TIME', 'EXPENSE', 'FIXED_FEE', 'MEDIA_SPEND'] as LogType[]).map((type) => (
+                                <button
+                                    key={type}
+                                    onClick={() => setActiveTab(type)}
+                                    className={`flex-1 py-3 font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all min-w-[25%]
+                                    ${activeTab === type ? 'bg-slate-900 text-white' : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'}`}
+                                >
+                                    {type === 'TIME' && <Clock size={16} weight="duotone" />}
+                                    {type === 'EXPENSE' && <Tag size={16} weight="duotone" />}
+                                    {type === 'FIXED_FEE' && <Check size={16} weight="duotone" />}
+                                    {type === 'MEDIA_SPEND' && <Megaphone size={16} weight="duotone" />}
+                                    {type.replace('_', ' ')}
+                                </button>
+                            ))}
                         </div>
                     )}
 
@@ -134,7 +159,7 @@ const Tracker: React.FC = () => {
                         <div className="bg-amber-50 border-b border-amber-100 p-4 transition-all flex items-center justify-between">
                             <div className="flex items-center gap-2 text-amber-800 font-bold text-sm">
                                 <PencilSimple size={18} weight="bold" />
-                                Editing {activeTab === 'TIME' ? 'Billable Hours' : 'Expense'}
+                                Editing {activeTab.replace('_', ' ')}
                             </div>
                             <button onClick={resetForm} className="text-amber-800 hover:bg-amber-100 p-1 rounded-full transition-colors">
                                 <X size={20} weight="bold" />
@@ -174,7 +199,7 @@ const Tracker: React.FC = () => {
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</label>
                             <input
                                 type="text"
-                                placeholder={activeTab === 'TIME' ? "What did you work on?" : "What did you purchase?"}
+                                placeholder={activeTab === 'TIME' ? "What did you work on?" : "Description of item/fee"}
                                 required
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -182,7 +207,7 @@ const Tracker: React.FC = () => {
                             />
                         </div>
 
-                        {activeTab === 'TIME' ? (
+                        {activeTab === 'TIME' && (
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours</label>
                                 <input
@@ -195,7 +220,9 @@ const Tracker: React.FC = () => {
                                     className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
                                 />
                             </div>
-                        ) : (
+                        )}
+
+                        {activeTab === 'EXPENSE' && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cost ($)</label>
@@ -223,14 +250,37 @@ const Tracker: React.FC = () => {
                             </div>
                         )}
 
-                        {activeTab === 'EXPENSE' && Number(formData.cost) > 0 && (
+                        {(activeTab === 'FIXED_FEE' || activeTab === 'MEDIA_SPEND') && (
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                    {activeTab === 'FIXED_FEE' ? 'Fee Amount ($)' : 'Total Media Spend ($)'}
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    required
+                                    value={formData.amount}
+                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                />
+                                {activeTab === 'MEDIA_SPEND' && (
+                                    <p className="text-xs text-slate-400 mt-1">
+                                        Client fee is set to <strong>{selectedClient?.billingSettings?.mediaManagementFee || 15}%</strong>.
+                                        Billable amount: <strong>${((Number(formData.amount) || 0) * ((selectedClient?.billingSettings?.mediaManagementFee || 15) / 100)).toFixed(2)}</strong>
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab !== 'TIME' && (
                             <div className="bg-slate-900 p-6 rounded-2xl flex justify-between items-center text-white">
                                 <div>
                                     <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Client Billable</p>
                                     <p className="text-3xl font-bold">${billableAmount.toFixed(2)}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Profit Margin</p>
+                                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Profit/Fee</p>
                                     <p className="text-xl font-bold text-emerald-400">+ ${profit.toFixed(2)}</p>
                                 </div>
                             </div>
@@ -262,8 +312,15 @@ const Tracker: React.FC = () => {
                             return (
                                 <div key={log.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group">
                                     <div className="flex justify-between items-start mb-3">
-                                        <div className={`p-2 rounded-lg ${log.type === 'TIME' ? 'bg-sky-50 text-sky-600' : 'bg-slate-50 text-black'}`}>
-                                            {log.type === 'TIME' ? <Clock size={20} weight="duotone" /> : <Tag size={15} weight="fill" />}
+                                        <div className={`p-2 rounded-lg 
+                                            ${log.type === 'TIME' ? 'bg-sky-50 text-sky-600' :
+                                                log.type === 'EXPENSE' ? 'bg-rose-50 text-rose-600' :
+                                                    log.type === 'FIXED_FEE' ? 'bg-emerald-50 text-emerald-600' :
+                                                        'bg-purple-50 text-purple-600'}`}>
+                                            {log.type === 'TIME' && <Clock size={20} weight="duotone" />}
+                                            {log.type === 'EXPENSE' && <Tag size={20} weight="duotone" />}
+                                            {log.type === 'FIXED_FEE' && <Check size={20} weight="duotone" />}
+                                            {log.type === 'MEDIA_SPEND' && <Megaphone size={20} weight="duotone" />}
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button

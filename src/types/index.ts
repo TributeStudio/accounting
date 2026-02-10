@@ -1,4 +1,4 @@
-export type LogType = 'TIME' | 'EXPENSE';
+export type LogType = 'TIME' | 'EXPENSE' | 'FIXED_FEE' | 'MEDIA_SPEND';
 
 export interface Project {
   id: string;
@@ -17,8 +17,9 @@ export interface LogItem {
   type: LogType;
   // Time specific
   hours?: number;
-  // Expense specific
-  cost?: number;
+  // Expense/Fee specific
+  amount?: number; // Base amount ($ value)
+  cost?: number; // Internal cost (for expenses/media)
   markupPercent?: number;
   billableAmount?: number;
   profit?: number;
@@ -38,7 +39,7 @@ export interface InvoiceItem {
   quantity: number;
   rate: number;
   amount: number;
-  type: 'TIME' | 'EXPENSE';
+  type: LogType;
   originalLogId?: string; // Reference to original log
 }
 
@@ -67,6 +68,11 @@ export interface Client {
   defaultRate: number;
   status: 'ACTIVE' | 'ARCHIVED';
   createdAt: number;
+  billingSettings?: {
+    retainerAmount?: number;
+    mediaManagementFee?: number; // percent
+    adminFeePercentage?: number; // percent
+  };
 }
 
 export interface AppState {
