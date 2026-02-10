@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, UserSquare, User, Pencil } from '@phosphor-icons/react';
+import { Plus, UserSquare, User, Pencil, Trash } from '@phosphor-icons/react';
 import type { Project } from '../types';
 
 const Projects: React.FC = () => {
-    const { projects, clients, addProject, updateProject } = useApp();
+    const { projects, clients, addProject, updateProject, deleteProject } = useApp();
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [formData, setFormData] = useState({
@@ -25,6 +25,12 @@ const Projects: React.FC = () => {
             status: project.status
         });
         setShowAddModal(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+            await deleteProject(id);
+        }
     };
 
     const handleCloseModal = () => {
@@ -99,9 +105,16 @@ const Projects: React.FC = () => {
                                 <button
                                     onClick={() => handleEdit(project)}
                                     className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                                    title="Edit Guest"
+                                    title="Edit Project"
                                 >
                                     <Pencil size={18} weight="bold" />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(project.id)}
+                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                    title="Delete Project"
+                                >
+                                    <Trash size={18} weight="bold" />
                                 </button>
                                 <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
                                     ? 'bg-emerald-50 text-emerald-600'

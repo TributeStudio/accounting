@@ -14,6 +14,7 @@ interface AppContextType extends AppState {
     updateLog: (id: string, updates: Partial<LogItem>) => Promise<void>;
     deleteLog: (id: string) => Promise<void>;
     updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+    deleteProject: (id: string) => Promise<void>;
     addClient: (client: Omit<Client, 'id' | 'createdAt'>) => Promise<void>;
     updateClient: (id: string, updates: Partial<Client>) => Promise<void>;
     deleteClient: (id: string) => Promise<void>;
@@ -387,6 +388,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     };
 
+    const deleteProject = async (id: string) => {
+        if (state.isDemoMode) {
+            setState(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) }));
+        } else if (state.user) {
+            try {
+                await deleteDoc(doc(db, 'users', state.user.uid, 'projects', id));
+            } catch (error: any) {
+                console.error('Firestore Delete Project Error:', error);
+                throw error;
+            }
+        }
+    };
+
     const addInvoice = async (invoiceData: Omit<Invoice, 'id' | 'createdAt'>) => {
         const newInvoice = { ...invoiceData, createdAt: Date.now() };
 
@@ -506,6 +520,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             updateLog,
             deleteLog,
             updateProject,
+            deleteProject,
             addClient,
             updateClient,
             deleteClient,
