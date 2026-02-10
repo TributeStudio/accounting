@@ -70,7 +70,8 @@ const Invoices: React.FC = () => {
             const project = projects.find(p => p.id === l.projectId);
             if (l.type === 'TIME' && l.hours && project) {
                 subtotal += l.hours * project.hourlyRate;
-            } else if (l.type === 'EXPENSE' && l.billableAmount) {
+            } else if (l.billableAmount) {
+                // Covers EXPENSE, FIXED_FEE, and MEDIA_SPEND
                 subtotal += l.billableAmount;
             }
         });
