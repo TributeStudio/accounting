@@ -37,37 +37,27 @@ const Projects: React.FC = () => {
         e.preventDefault();
         setIsSaving(true);
 
-        const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Operation timed out. Please check your connection.")), 10000)
-        );
-
         try {
             if (editingProject) {
-                await Promise.race([
-                    updateProject(editingProject.id, {
-                        name: formData.name,
-                        client: formData.client,
-                        hourlyRate: Number(formData.hourlyRate) || 0, // Fallback to 0 if NaN
-                        status: formData.status
-                    }),
-                    timeoutPromise
-                ]);
+                await updateProject(editingProject.id, {
+                    name: formData.name,
+                    client: formData.client,
+                    hourlyRate: Number(formData.hourlyRate) || 0,
+                    status: formData.status
+                });
             } else {
-                await Promise.race([
-                    addProject({
-                        name: formData.name,
-                        client: formData.client,
-                        hourlyRate: Number(formData.hourlyRate) || 0,
-                        status: formData.status
-                    }),
-                    timeoutPromise
-                ]);
+                await addProject({
+                    name: formData.name,
+                    client: formData.client,
+                    hourlyRate: Number(formData.hourlyRate) || 0,
+                    status: formData.status
+                });
             }
+            setIsSaving(false);
             handleCloseModal();
         } catch (error: any) {
             console.error('Submit handle error:', error);
             alert(`Failed to save project: ${error.message || 'Unknown error'}`);
-        } finally {
             setIsSaving(false);
         }
     };

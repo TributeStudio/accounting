@@ -245,14 +245,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return;
         }
 
-        addDoc(collection(db, 'users', state.user.uid, 'projects'), newProject)
-            .then((docRef) => console.log('Project synced to server:', docRef.id))
-            .catch((error) => {
-                console.error('Firestore Add Project Error:', error);
-                if (error.code === 'permission-denied') {
-                    alert('Save Failed: You do not have permission to create projects.');
-                }
-            });
+        try {
+            const docRef = await addDoc(collection(db, 'users', state.user.uid, 'projects'), newProject);
+            console.log('Project synced to server:', docRef.id);
+        } catch (error: any) {
+            console.error('Firestore Add Project Error:', error);
+            if (error.code === 'permission-denied') {
+                alert('Save Failed: You do not have permission to create projects.');
+            }
+            throw error;
+        }
     };
 
     const addClient = async (clientData: Omit<Client, 'id' | 'createdAt'>) => {
