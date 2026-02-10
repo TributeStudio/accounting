@@ -4,7 +4,7 @@ import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Megaphone 
 import type { LogItem, LogType } from '../types';
 
 const Tracker: React.FC = () => {
-    const { projects, clients, logs, addLog, updateLog, deleteLog } = useApp();
+    const { projects, logs, addLog, updateLog, deleteLog } = useApp();
     const [activeTab, setActiveTab] = useState<LogType>('TIME');
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -16,17 +16,60 @@ const Tracker: React.FC = () => {
         description: '',
         hours: '',
         cost: '',
-        amount: '', // For Fixed Fee / Media Spend input
+        amount: '', // For Fixed Fee
         markupPercent: '20',
+
+        // Media Specific
+        googleSpend: '',
+        metaSpend: '',
+        billingMonth: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
     });
 
     // Helper to get client settings for the selected project
-    const selectedProject = projects.find(p => p.id === formData.projectId);
-    const selectedClient = selectedProject ? clients.find(c => c.name === selectedProject.client) : null;
+    // const selectedProject = projects.find(p => p.id === formData.projectId);
+    // const selectedClient = selectedProject ? clients.find(c => c.name === selectedProject.client) : null;
+
+    // We need selectedProject still? No, actually we don't use it in this version either except for the logic I just commented out?
+    // Wait, let's check. 
+    // Ah, lines 402 use project name in the history display.
+    // But inside the component body, 'selectedProject' variable defined on line 29 is only used for selectedClient.
+    // 'projects' is used in the form select.
+    // 'projects' is also used in history map.
+
+    // So line 29 and 30 are unused.
+
+
+    // Calculate Running Annual Spend
+    const currentYear = new Date().getFullYear();
+    const existingMediaLogs = logs.filter(l => {
+        const isSameProject = l.projectId === formData.projectId;
+        const isMedia = l.type === 'MEDIA_SPEND';
+        const isSameYear = new Date(l.date).getFullYear() === currentYear;
+        const isNotCurrentEditing = l.id !== editingLogId;
+        return isSameProject && isMedia && isSameYear && isNotCurrentEditing;
+    });
+
+    const previousAnnualSpend = existingMediaLogs.reduce((sum, log) => {
+        const google = log.mediaDetails?.googleSpend || 0;
+        const meta = log.mediaDetails?.metaSpend || 0;
+        const total = google + meta || log.cost || 0;
+        return sum + total;
+    }, 0);
+
+    const currentGoogleSpend = Number(formData.googleSpend) || 0;
+    const currentMetaSpend = Number(formData.metaSpend) || 0;
+    const currentTotalSpend = currentGoogleSpend + currentMetaSpend;
+
+    const runningAnnualTotal = previousAnnualSpend + currentTotalSpend;
 
     // Calculate Financials
     let billableAmount = 0;
     let profit = 0;
+    let mediaFees = {
+        mediaManagement: 0,
+        creativeOps: 0,
+        roiEngine: 0
+    };
 
     if (activeTab === 'EXPENSE') {
         const cost = Number(formData.cost);
@@ -35,13 +78,18 @@ const Tracker: React.FC = () => {
         profit = billableAmount - cost;
     } else if (activeTab === 'FIXED_FEE') {
         billableAmount = Number(formData.amount);
-        profit = billableAmount; // Assumed 100% profit usually, or we could track internal cost if needed
+        profit = billableAmount;
     } else if (activeTab === 'MEDIA_SPEND') {
-        const spend = Number(formData.amount);
-        // Use client specific media fee or default to 15%
-        const mediaFeePercent = selectedClient?.billingSettings?.mediaManagementFee || 15;
-        billableAmount = spend * (mediaFeePercent / 100);
-        profit = billableAmount; // The fee is the profit. Valid assumption for now.
+        const mmRate = 0.125;
+        const coRate = 0.040;
+        const reRate = 0.030;
+
+        mediaFees.mediaManagement = currentTotalSpend * mmRate;
+        mediaFees.creativeOps = currentTotalSpend * coRate;
+        mediaFees.roiEngine = currentTotalSpend * reRate;
+
+        billableAmount = mediaFees.mediaManagement + mediaFees.creativeOps + mediaFees.roiEngine;
+        profit = billableAmount;
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -69,10 +117,16 @@ const Tracker: React.FC = () => {
                 logData.billableAmount = billableAmount;
                 logData.profit = profit;
             } else if (activeTab === 'MEDIA_SPEND') {
-                logData.cost = Number(formData.amount); // Store spend as cost
-                logData.billableAmount = billableAmount; // Store fee as billable
+                logData.cost = currentTotalSpend;
+                logData.billableAmount = billableAmount;
                 logData.profit = profit;
-                logData.markupPercent = selectedClient?.billingSettings?.mediaManagementFee || 15;
+                logData.mediaDetails = {
+                    googleSpend: currentGoogleSpend,
+                    metaSpend: currentMetaSpend,
+                    billingMonth: formData.billingMonth,
+                    annualSpendRunningTotal: runningAnnualTotal,
+                    fees: mediaFees
+                };
             }
 
             if (editingLogId) {
@@ -101,6 +155,9 @@ const Tracker: React.FC = () => {
             cost: '',
             amount: '',
             markupPercent: '20',
+            googleSpend: '',
+            metaSpend: '',
+            billingMonth: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
         });
     };
 
@@ -115,6 +172,9 @@ const Tracker: React.FC = () => {
             cost: log.cost?.toString() || '',
             amount: (log.type === 'FIXED_FEE' ? log.billableAmount : log.cost)?.toString() || '',
             markupPercent: log.markupPercent?.toString() || '20',
+            googleSpend: log.mediaDetails?.googleSpend?.toString() || '',
+            metaSpend: log.mediaDetails?.metaSpend?.toString() || '',
+            billingMonth: log.mediaDetails?.billingMonth || new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -251,24 +311,95 @@ const Tracker: React.FC = () => {
                         )}
 
                         {(activeTab === 'FIXED_FEE' || activeTab === 'MEDIA_SPEND') && (
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    {activeTab === 'FIXED_FEE' ? 'Fee Amount ($)' : 'Total Media Spend ($)'}
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    required
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
-                                />
+                            <div className="space-y-6">
                                 {activeTab === 'MEDIA_SPEND' && (
-                                    <p className="text-xs text-slate-400 mt-1">
-                                        Client fee is set to <strong>{selectedClient?.billingSettings?.mediaManagementFee || 15}%</strong>.
-                                        Billable amount: <strong>${((Number(formData.amount) || 0) * ((selectedClient?.billingSettings?.mediaManagementFee || 15) / 100)).toFixed(2)}</strong>
-                                    </p>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Billing Month</label>
+                                        <select
+                                            className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                            value={formData.billingMonth}
+                                            onChange={(e) => setFormData({ ...formData, billingMonth: e.target.value })}
+                                        >
+                                            {Array.from({ length: 24 }).map((_, i) => {
+                                                const d = new Date();
+                                                d.setMonth(d.getMonth() - i);
+                                                const monthStr = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+                                                return <option key={monthStr} value={monthStr}>{monthStr}</option>;
+                                            })}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {activeTab === 'FIXED_FEE' && (
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                            Fee Amount ($)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            required
+                                            value={formData.amount}
+                                            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                            className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                        />
+                                    </div>
+                                )}
+
+                                {activeTab === 'MEDIA_SPEND' && (
+                                    <>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Google Spend ($)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="0.00"
+                                                    value={formData.googleSpend}
+                                                    onChange={(e) => setFormData({ ...formData, googleSpend: e.target.value })}
+                                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Meta Spend ($)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    placeholder="0.00"
+                                                    value={formData.metaSpend}
+                                                    onChange={(e) => setFormData({ ...formData, metaSpend: e.target.value })}
+                                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 bg-indigo-50/50 rounded-2xl space-y-3">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-indigo-900 font-medium">Annual Run Rate</span>
+                                                <span className="font-bold text-indigo-900">${runningAnnualTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="h-px bg-indigo-100 w-full" />
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between text-xs text-slate-500">
+                                                    <span>Media Mgmt (12.5%)</span>
+                                                    <span>${mediaFees.mediaManagement.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs text-slate-500">
+                                                    <span>Creative Ops (4.0%)</span>
+                                                    <span>${mediaFees.creativeOps.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs text-slate-500">
+                                                    <span>ROI Engine (3.0%)</span>
+                                                    <span>${mediaFees.roiEngine.toFixed(2)}</span>
+                                                </div>
+                                                <div className="flex justify-between text-xs text-slate-900 font-bold pt-1 border-t border-slate-200 mt-1">
+                                                    <span>Total Fees</span>
+                                                    <span>${billableAmount.toFixed(2)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         )}
@@ -280,7 +411,9 @@ const Tracker: React.FC = () => {
                                     <p className="text-3xl font-bold">${billableAmount.toFixed(2)}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Profit/Fee</p>
+                                    <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">
+                                        {activeTab === 'MEDIA_SPEND' ? 'Total Fees' : 'Profit/Fee'}
+                                    </p>
                                     <p className="text-xl font-bold text-emerald-400">+ ${profit.toFixed(2)}</p>
                                 </div>
                             </div>

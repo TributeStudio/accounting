@@ -23,6 +23,20 @@ export interface LogItem {
   markupPercent?: number;
   billableAmount?: number;
   profit?: number;
+
+  // Media Spend Specific details
+  mediaDetails?: {
+    googleSpend: number;
+    metaSpend: number;
+    billingMonth: string;
+    annualSpendRunningTotal: number;
+    fees: {
+      mediaManagement: number;
+      creativeOps: number;
+      roiEngine: number;
+    };
+  };
+
   createdAt: number;
 }
 
