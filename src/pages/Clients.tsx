@@ -55,9 +55,26 @@ const Clients: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // 1. Validate Inputs
+        const rate = Number(formData.defaultRate);
+        if (isNaN(rate)) {
+            alert("Please enter a valid hourly rate.");
+            return;
+        }
+
         setIsSaving(true);
 
-        const performSave = async () => {
+        // 2. Setup Watchdog Timeout
+        let isTimedOut = false;
+        const watchdog = setTimeout(() => {
+            isTimedOut = true;
+            setIsSaving(false);
+            alert("Request timed out. Please check your connection.");
+        }, 8000);
+
+        try {
+            // 3. Perform Operation
             if (editingClient) {
                 await updateClient(editingClient.id, {
                     name: formData.name,
@@ -65,7 +82,7 @@ const Clients: React.FC = () => {
                     email: formData.email,
                     phone: formData.phone,
                     address: formData.address,
-                    defaultRate: Number(formData.defaultRate),
+                    defaultRate: rate,
                     status: formData.status
                 });
             } else {
@@ -75,24 +92,25 @@ const Clients: React.FC = () => {
                     email: formData.email,
                     phone: formData.phone,
                     address: formData.address,
-                    defaultRate: Number(formData.defaultRate),
+                    defaultRate: rate,
                     status: formData.status
                 });
             }
-        };
 
-        const timeout = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Operation timed out')), 10000);
-        });
-
-        try {
-            await Promise.race([performSave(), timeout]);
-            setIsSaving(false);
-            handleCloseModal();
+            // 4. Success handling
+            clearTimeout(watchdog);
+            if (!isTimedOut) {
+                setIsSaving(false);
+                handleCloseModal();
+            }
         } catch (error: any) {
-            console.error('Submit error:', error);
-            setIsSaving(false);
-            alert(`Failed to save: ${error.message || 'Unknown error'}`);
+            // 5. Error handling
+            clearTimeout(watchdog);
+            if (!isTimedOut) {
+                console.error('Submit error:', error);
+                setIsSaving(false);
+                alert(`Failed to save: ${error.message}`);
+            }
         }
     };
 
