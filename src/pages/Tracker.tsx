@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Megaphone } from '@phosphor-icons/react';
+import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Faders } from '@phosphor-icons/react';
 import type { LogItem, LogType } from '../types';
 
 const Tracker: React.FC = () => {
     const { projects, logs, addLog, updateLog, deleteLog } = useApp();
     const [activeTab, setActiveTab] = useState<LogType>('TIME');
-    const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
 
@@ -92,58 +91,57 @@ const Tracker: React.FC = () => {
         profit = billableAmount;
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.projectId || !formData.description) return;
 
-        setIsLoading(true);
-        try {
-            const logData: any = {
-                projectId: formData.projectId,
-                date: formData.date,
-                description: formData.description,
-                type: activeTab,
+        // Optimistic UI - Update immediately without waiting for server
+        const logData: any = {
+            projectId: formData.projectId,
+            date: formData.date,
+            description: formData.description,
+            type: activeTab,
+        };
+
+        if (activeTab === 'TIME') {
+            logData.hours = Number(formData.hours);
+        } else if (activeTab === 'EXPENSE') {
+            logData.cost = Number(formData.cost);
+            logData.markupPercent = Number(formData.markupPercent);
+            logData.billableAmount = billableAmount;
+            logData.profit = profit;
+        } else if (activeTab === 'FIXED_FEE') {
+            logData.amount = Number(formData.amount);
+            logData.billableAmount = billableAmount;
+            logData.profit = profit;
+        } else if (activeTab === 'MEDIA_SPEND') {
+            logData.cost = currentTotalSpend;
+            logData.billableAmount = billableAmount;
+            logData.profit = profit;
+            logData.mediaDetails = {
+                googleSpend: currentGoogleSpend,
+                metaSpend: currentMetaSpend,
+                billingMonth: formData.billingMonth,
+                annualSpendRunningTotal: runningAnnualTotal,
+                fees: mediaFees
             };
-
-            if (activeTab === 'TIME') {
-                logData.hours = Number(formData.hours);
-            } else if (activeTab === 'EXPENSE') {
-                logData.cost = Number(formData.cost);
-                logData.markupPercent = Number(formData.markupPercent);
-                logData.billableAmount = billableAmount;
-                logData.profit = profit;
-            } else if (activeTab === 'FIXED_FEE') {
-                logData.amount = Number(formData.amount);
-                logData.billableAmount = billableAmount;
-                logData.profit = profit;
-            } else if (activeTab === 'MEDIA_SPEND') {
-                logData.cost = currentTotalSpend;
-                logData.billableAmount = billableAmount;
-                logData.profit = profit;
-                logData.mediaDetails = {
-                    googleSpend: currentGoogleSpend,
-                    metaSpend: currentMetaSpend,
-                    billingMonth: formData.billingMonth,
-                    annualSpendRunningTotal: runningAnnualTotal,
-                    fees: mediaFees
-                };
-            }
-
-            if (editingLogId) {
-                await updateLog(editingLogId, logData);
-                setEditingLogId(null);
-            } else {
-                await addLog(logData);
-            }
-
-            setSuccess(true);
-            resetForm();
-            setTimeout(() => setSuccess(false), 3000);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setIsLoading(false);
         }
+
+        const savePromise = editingLogId
+            ? updateLog(editingLogId, logData)
+            : addLog(logData);
+
+        // Handle background errors
+        savePromise.catch((error) => {
+            console.error("Failed to save log:", error);
+            alert("Error saving log to cloud. Changes may not persist.");
+        });
+
+        // Update UI Immediately
+        if (editingLogId) setEditingLogId(null);
+        setSuccess(true);
+        resetForm();
+        setTimeout(() => setSuccess(false), 3000);
     };
 
     const resetForm = () => {
@@ -208,7 +206,7 @@ const Tracker: React.FC = () => {
                                     {type === 'TIME' && <Clock size={16} weight="duotone" />}
                                     {type === 'EXPENSE' && <Tag size={16} weight="duotone" />}
                                     {type === 'FIXED_FEE' && <Check size={16} weight="duotone" />}
-                                    {type === 'MEDIA_SPEND' && <Megaphone size={16} weight="duotone" />}
+                                    {type === 'MEDIA_SPEND' && <Faders size={16} weight="duotone" />}
                                     {type.replace('_', ' ')}
                                 </button>
                             ))}
@@ -421,13 +419,10 @@ const Tracker: React.FC = () => {
 
                         <button
                             type="submit"
-                            disabled={isLoading}
                             className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all
                             ${success ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                         >
-                            {isLoading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : success ? (
+                            {success ? (
                                 <><Check size={20} weight="bold" /> {editingLogId ? 'Update Saved' : 'Entry Saved'}</>
                             ) : (
                                 <>{editingLogId ? <><FloppyDisk size={20} weight="bold" /> Update Entry</> : <><Plus size={20} weight="bold" /> Log Activity</>}</>
@@ -453,7 +448,7 @@ const Tracker: React.FC = () => {
                                             {log.type === 'TIME' && <Clock size={20} weight="duotone" />}
                                             {log.type === 'EXPENSE' && <Tag size={20} weight="duotone" />}
                                             {log.type === 'FIXED_FEE' && <Check size={20} weight="duotone" />}
-                                            {log.type === 'MEDIA_SPEND' && <Megaphone size={20} weight="duotone" />}
+                                            {log.type === 'MEDIA_SPEND' && <Faders size={20} weight="duotone" />}
                                         </div>
                                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button

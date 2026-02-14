@@ -131,14 +131,20 @@ const Statements: React.FC = () => {
         ));
     };
 
-    const handleSaveItem = async (item: ExtractedItem) => {
+    const handleSaveItem = (item: ExtractedItem) => {
         if (!item.projectId) return;
 
         try {
             const cost = Number(item.amount);
             const billable = cost * (1 + Number(markupPercent) / 100);
 
-            await addLog({
+            // Optimistic update - assume success immediately
+            setExtractedItems(prev => prev.map(i =>
+                i.id === item.id ? { ...i, status: 'saved' as const, selected: false } : i
+            ));
+
+            // Background save with error handling
+            addLog({
                 projectId: item.projectId,
                 date: item.date,
                 description: item.description,
@@ -147,14 +153,18 @@ const Statements: React.FC = () => {
                 markupPercent: Number(markupPercent),
                 billableAmount: billable,
                 profit: billable - cost
+            }).catch(error => {
+                console.error('Background save failed:', error);
+                alert('Warning: Failed to save item to cloud. Please refresh and try again.');
+                // Revert optimistic update
+                setExtractedItems(prev => prev.map(i =>
+                    i.id === item.id ? { ...i, status: 'pending' as const, selected: true } : i
+                ));
             });
 
-            setExtractedItems(prev => prev.map(i =>
-                i.id === item.id ? { ...i, status: 'saved' as const, selected: false } : i
-            ));
         } catch (error) {
             console.error(error);
-            alert('Failed to save log');
+            alert('Failed to process item');
         }
     };
 
