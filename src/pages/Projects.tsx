@@ -4,7 +4,7 @@ import { Plus, UserSquare, User, Pencil, Trash } from '@phosphor-icons/react';
 import type { Project } from '../types';
 
 const Projects: React.FC = () => {
-    const { projects, clients, addProject, updateProject, deleteProject } = useApp();
+    const { projects, clients, logs, addProject, updateProject, deleteProject } = useApp();
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [formData, setFormData] = useState({
@@ -138,8 +138,16 @@ const Projects: React.FC = () => {
                                 <p className="text-lg font-bold text-slate-900 tabular-nums">${project.hourlyRate}<span className="text-sm font-normal text-slate-400">/hr</span></p>
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Created</p>
-                                <p className="text-sm font-medium text-slate-600">{new Date(project.createdAt).toLocaleDateString()}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Billed</p>
+                                <p className="text-lg font-bold text-slate-900 tabular-nums">
+                                    ${logs
+                                        .filter(l => l.projectId === project.id)
+                                        .reduce((sum, l) => {
+                                            if (l.type === 'TIME') return sum + ((l.hours || 0) * project.hourlyRate);
+                                            return sum + (l.billableAmount || 0);
+                                        }, 0)
+                                        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </p>
                             </div>
                         </div>
                     </div>
