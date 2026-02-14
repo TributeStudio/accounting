@@ -455,10 +455,10 @@ const Tracker: React.FC = () => {
                                                         log.type === 'EXPENSE' ? 'bg-rose-50 text-rose-600' :
                                                             log.type === 'FIXED_FEE' ? 'bg-emerald-50 text-emerald-600' :
                                                                 'bg-purple-50 text-purple-600'}`}>
-                                                    {log.type === 'TIME' && <Clock size={20} weight="duotone" />}
-                                                    {log.type === 'EXPENSE' && <Tag size={20} weight="duotone" />}
-                                                    {log.type === 'FIXED_FEE' && <Check size={20} weight="duotone" />}
-                                                    {log.type === 'MEDIA_SPEND' && <Faders size={20} weight="duotone" />}
+                                                    {log.type === 'TIME' && <Clock size={16} weight="fill" />}
+                                                    {log.type === 'EXPENSE' && <Tag size={16} weight="fill" />}
+                                                    {log.type === 'FIXED_FEE' && <Check size={16} weight="fill" />}
+                                                    {log.type === 'MEDIA_SPEND' && <Faders size={16} weight="fill" />}
                                                 </div>
                                                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
