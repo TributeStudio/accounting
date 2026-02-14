@@ -435,44 +435,55 @@ const Tracker: React.FC = () => {
                 <div className="lg:col-span-2 space-y-6">
                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-2">Recent Logs</h2>
                     <div className="space-y-4">
-                        {logs.slice(0, 10).map((log) => {
-                            const project = projects.find(p => p.id === log.projectId);
+                        {Object.entries(logs.slice(0, 20).reduce((groups, log) => {
+                            const pid = log.projectId;
+                            if (!groups[pid]) groups[pid] = [];
+                            groups[pid].push(log);
+                            return groups;
+                        }, {} as Record<string, typeof logs>)).map(([projectId, projectLogs]) => {
+                            const project = projects.find(p => p.id === projectId);
                             return (
-                                <div key={log.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className={`p-2 rounded-lg 
-                                            ${log.type === 'TIME' ? 'bg-sky-50 text-sky-600' :
-                                                log.type === 'EXPENSE' ? 'bg-rose-50 text-rose-600' :
-                                                    log.type === 'FIXED_FEE' ? 'bg-emerald-50 text-emerald-600' :
-                                                        'bg-purple-50 text-purple-600'}`}>
-                                            {log.type === 'TIME' && <Clock size={20} weight="duotone" />}
-                                            {log.type === 'EXPENSE' && <Tag size={20} weight="duotone" />}
-                                            {log.type === 'FIXED_FEE' && <Check size={20} weight="duotone" />}
-                                            {log.type === 'MEDIA_SPEND' && <Faders size={20} weight="duotone" />}
+                                <div key={projectId} className="space-y-3">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-2 border-b border-slate-100 pb-2">
+                                        {project?.name || 'Unknown Project'}
+                                    </h3>
+                                    {projectLogs.map(log => (
+                                        <div key={log.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 group">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className={`p-2 rounded-lg 
+                                                    ${log.type === 'TIME' ? 'bg-sky-50 text-sky-600' :
+                                                        log.type === 'EXPENSE' ? 'bg-rose-50 text-rose-600' :
+                                                            log.type === 'FIXED_FEE' ? 'bg-emerald-50 text-emerald-600' :
+                                                                'bg-purple-50 text-purple-600'}`}>
+                                                    {log.type === 'TIME' && <Clock size={20} weight="duotone" />}
+                                                    {log.type === 'EXPENSE' && <Tag size={20} weight="duotone" />}
+                                                    {log.type === 'FIXED_FEE' && <Check size={20} weight="duotone" />}
+                                                    {log.type === 'MEDIA_SPEND' && <Faders size={20} weight="duotone" />}
+                                                </div>
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => handleEdit(log)}
+                                                        className="p-2 hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded-lg transition-colors"
+                                                    >
+                                                        <PencilSimple size={16} weight="bold" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(log.id)}
+                                                        className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash size={16} weight="bold" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <h3 className="text-sm font-bold text-slate-900 mb-1 leading-tight">{log.description}</h3>
+                                            <div className="flex justify-between items-center pt-3 border-t border-slate-50 mt-3">
+                                                <span className="text-[10px] text-slate-400 font-medium">{log.date}</span>
+                                                <span className="text-sm font-bold text-slate-900">
+                                                    {log.type === 'TIME' ? `${log.hours}h` : `$${log.billableAmount?.toFixed(2)}`}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => handleEdit(log)}
-                                                className="p-2 hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded-lg transition-colors"
-                                            >
-                                                <PencilSimple size={16} weight="bold" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(log.id)}
-                                                className="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                                            >
-                                                <Trash size={16} weight="bold" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-sm font-bold text-slate-900 mb-1 leading-tight">{log.description}</h3>
-                                    <p className="text-xs text-slate-500 mb-3">{project?.name || 'Unknown Project'}</p>
-                                    <div className="flex justify-between items-center pt-3 border-t border-slate-50">
-                                        <span className="text-[10px] text-slate-400 font-medium">{log.date}</span>
-                                        <span className="text-sm font-bold text-slate-900">
-                                            {log.type === 'TIME' ? `${log.hours}h` : `$${log.billableAmount?.toFixed(2)}`}
-                                        </span>
-                                    </div>
+                                    ))}
                                 </div>
                             );
                         })}

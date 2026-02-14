@@ -337,30 +337,60 @@ const Invoices: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
-                                    {filteredLogs.map((log) => {
-                                        const project = projects.find(p => p.id === log.projectId);
-                                        const amount = log.type === 'TIME'
-                                            ? (log.hours! * project!.hourlyRate)
-                                            : log.billableAmount!;
+                                    {Object.entries(filteredLogs.reduce((groups, log) => {
+                                        const pid = log.projectId;
+                                        if (!groups[pid]) groups[pid] = [];
+                                        groups[pid].push(log);
+                                        return groups;
+                                    }, {} as Record<string, typeof filteredLogs>)).map(([projectId, projectLogs]) => {
+                                        const project = projects.find(p => p.id === projectId);
+                                        const projectSubtotal = projectLogs.reduce((sum, log) => {
+                                            const p = projects.find(proj => proj.id === log.projectId);
+                                            if (log.type === 'TIME') return sum + ((log.hours || 0) * (p?.hourlyRate || 0));
+                                            return sum + (log.billableAmount || 0);
+                                        }, 0);
 
                                         return (
-                                            <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                                                <td className="px-8 py-6 text-sm text-slate-500 tabular-nums">{log.date}</td>
-                                                <td className="px-8 py-6">
-                                                    <p className="text-sm font-bold text-slate-900 mb-0.5">{project?.name}</p>
-                                                    <p className="text-sm text-slate-500">{log.description}</p>
-                                                </td>
-                                                <td className="px-8 py-6">
-                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider
-                                                        ${log.type === 'TIME' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-black'}`}>
-                                                        {log.type}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-6 text-sm font-bold text-slate-900 text-right tabular-nums">
-                                                    ${amount.toFixed(2)}
-                                                    {log.type === 'TIME' && <span className="block text-[10px] font-normal text-slate-400">{log.hours}h @ ${project?.hourlyRate}/h</span>}
-                                                </td>
-                                            </tr>
+                                            <React.Fragment key={projectId}>
+                                                {/* Project Header */}
+                                                <tr className="bg-slate-50 border-y border-slate-100">
+                                                    <td colSpan={4} className="py-3 px-8 font-bold text-slate-900 uppercase tracking-wider text-xs">
+                                                        {project?.name || 'Unassigned Project'}
+                                                    </td>
+                                                </tr>
+
+                                                {/* Items */}
+                                                {projectLogs.map((log) => {
+                                                    const p = projects.find(pr => pr.id === log.projectId);
+                                                    const amount = log.type === 'TIME'
+                                                        ? (log.hours! * p!.hourlyRate)
+                                                        : log.billableAmount!;
+
+                                                    return (
+                                                        <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                                                            <td className="px-8 py-6 text-sm text-slate-500 tabular-nums pl-12">{log.date}</td>
+                                                            <td className="px-8 py-6">
+                                                                <p className="text-sm font-bold text-slate-900 mb-0.5">{log.description}</p>
+                                                            </td>
+                                                            <td className="px-8 py-6">
+                                                                <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider
+                                                                    ${log.type === 'TIME' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-black'}`}>
+                                                                    {log.type}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-8 py-6 text-sm font-bold text-slate-900 text-right tabular-nums">
+                                                                ${amount.toFixed(2)}
+                                                                {log.type === 'TIME' && <span className="block text-[10px] font-normal text-slate-400">{log.hours}h @ ${p?.hourlyRate}/h</span>}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                                {/* Subtotal Row */}
+                                                <tr className="bg-slate-50/30">
+                                                    <td colSpan={3} className="px-8 py-4 text-right text-xs font-bold text-slate-400 uppercase tracking-wider">Subtotal</td>
+                                                    <td className="px-8 py-4 text-right font-bold text-slate-900">${projectSubtotal.toFixed(2)}</td>
+                                                </tr>
+                                            </React.Fragment>
                                         );
                                     })}
                                 </tbody>
