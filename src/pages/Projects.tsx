@@ -157,9 +157,24 @@ const Projects: React.FC = () => {
 
     const availableMonths = useMemo(() => {
         const months = new Set<string>();
+
+        // 1. Add months from logs
         logs.forEach(l => {
             if (l.date) months.add(l.date.substring(0, 7));
         });
+
+        // 2. Add last 24 months to ensure "any" month is selectable
+        const d = new Date();
+        // Reset to first day to avoid edge cases when rolling back months (e.g. rolling back from 31st)
+        d.setDate(1);
+        for (let i = 0; i < 24; i++) {
+            // Use local YYYY-MM construction
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            months.add(`${y}-${m}`);
+            d.setMonth(d.getMonth() - 1);
+        }
+
         return Array.from(months).sort().reverse();
     }, [logs]);
 
