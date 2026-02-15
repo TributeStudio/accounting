@@ -10,7 +10,7 @@ const Projects: React.FC = () => {
     const [formData, setFormData] = useState({
         name: '',
         client: '',
-        hourlyRate: '150',
+        startDate: new Date().toISOString().split('T')[0],
         status: 'ACTIVE' as 'ACTIVE' | 'ARCHIVED' | 'COMPLETED'
     });
 
@@ -21,7 +21,7 @@ const Projects: React.FC = () => {
         setFormData({
             name: project.name,
             client: project.client,
-            hourlyRate: project.hourlyRate.toString(),
+            startDate: project.startDate || new Date(project.createdAt).toISOString().split('T')[0],
             status: project.status
         });
         setShowAddModal(true);
@@ -36,36 +36,32 @@ const Projects: React.FC = () => {
     const handleCloseModal = () => {
         setShowAddModal(false);
         setEditingProject(null);
-        setFormData({ name: '', client: '', hourlyRate: '150', status: 'ACTIVE' });
+        setFormData({ name: '', client: '', startDate: new Date().toISOString().split('T')[0], status: 'ACTIVE' });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         // 1. Validate Inputs
-        const rate = Number(formData.hourlyRate);
-        if (isNaN(rate)) {
-            alert("Please enter a valid hourly rate.");
+        if (!formData.startDate) {
+            alert("Please enter a valid start date.");
             return;
         }
 
         setIsSaving(true);
 
         // 2. Fire and forget (Optimistic Update)
-        // We do NOT await this. Firestore handles local updates immediately.
+        const commonData = {
+            name: formData.name,
+            client: formData.client,
+            hourlyRate: 0, // Default to 0 as rate is now set in Tracker
+            startDate: formData.startDate,
+            status: formData.status
+        };
+
         const savePromise = editingProject
-            ? updateProject(editingProject.id, {
-                name: formData.name,
-                client: formData.client,
-                hourlyRate: rate,
-                status: formData.status
-            })
-            : addProject({
-                name: formData.name,
-                client: formData.client,
-                hourlyRate: rate,
-                status: formData.status
-            });
+            ? updateProject(editingProject.id, commonData)
+            : addProject({ ...commonData }); // addProject expects hourlyRate
 
         // 3. Background Error Handling
         savePromise.catch((error) => {
@@ -80,7 +76,7 @@ const Projects: React.FC = () => {
     };
 
     // --- SORTING & FILTERING ---
-    const [sortBy, setSortBy] = useState<'CLIENT' | 'ACTIVITY' | 'NAME'>('CLIENT');
+    const [sortBy, setSortBy] = useState<'CLIENT' | 'ACTIVITY' | 'NAME' | 'START_DATE'>('CLIENT');
     const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
     const [selectedClient, setSelectedClient] = useState<string>('ALL');
 
@@ -146,6 +142,8 @@ const Projects: React.FC = () => {
             sorted.sort((a, b) => a.client.localeCompare(b.client));
         } else if (sortBy === 'NAME') {
             sorted.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortBy === 'START_DATE') {
+            sorted.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
         } else if (sortBy === 'ACTIVITY') {
             sorted.sort((a, b) => {
                 const ma = projectMetrics[a.id]?.lastActive || '0000-00-00';
@@ -192,6 +190,7 @@ const Projects: React.FC = () => {
                             onChange={(e) => setSortBy(e.target.value as any)}
                         >
                             <option value="CLIENT">Sort by Client</option>
+                            <option value="START_DATE">Sort by Date</option>
                             <option value="ACTIVITY">Sort by Recent</option>
                             <option value="NAME">Sort by Name</option>
                         </select>
@@ -303,14 +302,7 @@ const Projects: React.FC = () => {
                                         required
                                         className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900 appearance-none"
                                         value={formData.client}
-                                        onChange={(e) => {
-                                            const selectedClient = clients.find(c => c.name === e.target.value);
-                                            setFormData({
-                                                ...formData,
-                                                client: e.target.value,
-                                                hourlyRate: selectedClient ? selectedClient.defaultRate.toString() : formData.hourlyRate
-                                            });
-                                        }}
+                                        onChange={(e) => setFormData({ ...formData, client: e.target.value })}
                                     >
                                         <option value="">Select a Client</option>
                                         {clients
@@ -332,13 +324,13 @@ const Projects: React.FC = () => {
                                 )}
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hourly Rate ($)</label>
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Start Date</label>
                                 <input
-                                    type="number"
+                                    type="date"
                                     required
                                     className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
-                                    value={formData.hourlyRate}
-                                    onChange={(e) => setFormData({ ...formData, hourlyRate: e.target.value })}
+                                    value={formData.startDate}
+                                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                                 />
                             </div>
                             <div className="space-y-2">

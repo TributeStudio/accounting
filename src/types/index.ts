@@ -5,6 +5,7 @@ export interface Project {
   name: string;
   client: string;
   hourlyRate: number;
+  startDate?: string;
   status: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED';
   createdAt: number;
 }
