@@ -20,6 +20,8 @@ const Tracker: React.FC = () => {
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
 
     const [selectedClient, setSelectedClient] = useState<string>('');
+    const [logFilterClient, setLogFilterClient] = useState<string>('ALL');
+    const [logFilterMonth, setLogFilterMonth] = useState<string>('ALL');
     const [formData, setFormData] = useState({
         projectId: '',
         date: new Date().toISOString().split('T')[0],
@@ -242,6 +244,21 @@ const Tracker: React.FC = () => {
     };
 
     const uniqueClients = React.useMemo(() => Array.from(new Set(projects.map(p => p.client))).sort(), [projects]);
+
+    const availableLogMonths = React.useMemo(() => {
+        const ms = new Set<string>();
+        logs.forEach(l => ms.add(l.date.substring(0, 7)));
+        return Array.from(ms).sort().reverse();
+    }, [logs]);
+
+    const filteredLogs = React.useMemo(() => {
+        return logs.filter(l => {
+            const proj = projects.find(p => p.id === l.projectId);
+            const clientMatch = logFilterClient === 'ALL' || (proj && proj.client === logFilterClient);
+            const monthMatch = logFilterMonth === 'ALL' || l.date.startsWith(logFilterMonth);
+            return clientMatch && monthMatch;
+        });
+    }, [logs, projects, logFilterClient, logFilterMonth]);
 
     const { projectsByMonth, sortedMonthKeys } = React.useMemo(() => {
         const filtered = selectedClient ? projects.filter(p => p.client === selectedClient) : [];
@@ -709,9 +726,33 @@ const Tracker: React.FC = () => {
 
                 {/* History Section */}
                 <div className="lg:col-span-2 space-y-6">
-                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-2">Recent Logs</h2>
+                    <div className="flex justify-between items-center px-2 mb-4">
+                        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">Recent Logs</h2>
+                        <div className="flex gap-2">
+                            <select
+                                value={logFilterClient}
+                                onChange={(e) => setLogFilterClient(e.target.value)}
+                                className="bg-transparent text-xs font-bold text-slate-400 border border-slate-200 rounded-lg px-2 py-1 focus:ring-0 focus:border-slate-400 outline-none"
+                            >
+                                <option value="ALL">All Clients</option>
+                                {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                            <select
+                                value={logFilterMonth}
+                                onChange={(e) => setLogFilterMonth(e.target.value)}
+                                className="bg-transparent text-xs font-bold text-slate-400 border border-slate-200 rounded-lg px-2 py-1 focus:ring-0 focus:border-slate-400 outline-none"
+                            >
+                                <option value="ALL">All Months</option>
+                                {availableLogMonths.map(m => {
+                                    const [y, mo] = m.split('-');
+                                    const label = new Date(Number(y), Number(mo) - 1).toLocaleDateString('default', { month: 'short', year: 'numeric' });
+                                    return <option key={m} value={m}>{label}</option>
+                                })}
+                            </select>
+                        </div>
+                    </div>
                     <div className="space-y-4">
-                        {Object.entries(logs.slice(0, 20).reduce((groups, log) => {
+                        {Object.entries(filteredLogs.slice(0, 50).reduce((groups, log) => {
                             const pid = log.projectId;
                             if (!groups[pid]) groups[pid] = [];
                             groups[pid].push(log);
