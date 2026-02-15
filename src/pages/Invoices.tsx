@@ -62,10 +62,22 @@ const Invoices: React.FC = () => {
         }
 
         return filtered.sort((a, b) => {
-            const priorities: Record<string, number> = { 'TIME': 1, 'EXPENSE': 2, 'MEDIA_SPEND': 3, 'FIXED_FEE': 4 };
-            const pa = priorities[a.type] || 99;
-            const pb = priorities[b.type] || 99;
-            if (pa !== pb) return pa - pb;
+            const getWeight = (l: typeof a) => {
+                const desc = l.description.toLowerCase();
+                // 1. Media
+                if (l.type === 'MEDIA_SPEND') return 10;
+                // 2. Retainer
+                if (l.type === 'FIXED_FEE' || desc.includes('retainer')) return 20;
+                // 4. Stand Up Meetings (Last)
+                if (desc.includes('stand up') || desc.includes('meeting')) return 90;
+                // 3. Rest
+                return 50;
+            };
+
+            const wa = getWeight(a);
+            const wb = getWeight(b);
+            if (wa !== wb) return wa - wb;
+
             return b.date.localeCompare(a.date);
         });
     }, [selectedClientId, selectedProjectId, dateFilterType, selectedMonth, dateRange, logs, projects]);
@@ -657,7 +669,7 @@ const Invoices: React.FC = () => {
                                                                     {/* Unit Price Display Logic - Show Effective Rate */}
                                                                     {log.type === 'TIME' ? `$${(hourlyRate * (log.rateMultiplier || 1)).toFixed(2)}` :
                                                                         log.type === 'MEDIA_SPEND' ? '-' :
-                                                                            `$${log.cost}`}
+                                                                            `$${(log.cost ?? log.billableAmount ?? 0).toFixed(2)}`}
 
                                                                     {log.rateMultiplier && log.rateMultiplier !== 1 && (
                                                                         <div className="text-[9px] text-amber-600 font-bold mt-0.5">
