@@ -806,7 +806,17 @@ const Tracker: React.FC = () => {
                                                             </div>
                                                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{log.date}</span>
                                                         </div>
-                                                        <p className="text-sm font-bold text-slate-800 leading-snug">{log.description}</p>
+                                                        <p className="text-sm font-bold text-slate-800 leading-snug">
+                                                            {log.description}
+                                                            {(() => {
+                                                                const match = LICENSE_FEES.find(f => f.label === log.description);
+                                                                if (match && log.cost && log.cost > match.cost + 0.01) {
+                                                                    const qty = Math.round(log.cost / match.cost);
+                                                                    if (qty > 1) return <span className="text-[10px] text-slate-400 font-bold ml-1 uppercase">(Qty: {qty})</span>;
+                                                                }
+                                                                return null;
+                                                            })()}
+                                                        </p>
                                                     </div>
 
                                                     <div className="text-right">
