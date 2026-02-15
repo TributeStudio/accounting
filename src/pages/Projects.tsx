@@ -143,7 +143,7 @@ const Projects: React.FC = () => {
                                     ${logs
                                         .filter(l => l.projectId === project.id)
                                         .reduce((sum, l) => {
-                                            if (l.type === 'TIME') return sum + ((l.hours || 0) * project.hourlyRate * (l.rateMultiplier || 1));
+                                            if (l.type === 'TIME') return sum + ((l.hours || 0) * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1));
                                             return sum + (l.billableAmount || 0);
                                         }, 0)
                                         .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

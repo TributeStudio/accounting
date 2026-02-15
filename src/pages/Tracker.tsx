@@ -15,6 +15,7 @@ const Tracker: React.FC = () => {
         description: '',
         hours: '',
         rateMultiplier: '1.0',
+        rate: '',
         cost: '',
         amount: '', // For Fixed Fee
         markupPercent: '20',
@@ -92,9 +93,41 @@ const Tracker: React.FC = () => {
         profit = billableAmount;
     }
 
+    const STANDARD_RATES = [
+        { label: 'DaVinci Resolve Edit Bay', rate: 150 },
+        { label: 'Color Grading Suite', rate: 175 },
+        { label: 'Audio Mix / VO Booth', rate: 125 },
+        { label: 'Senior Editor', rate: 250 },
+        { label: 'Motion Graphics Designer', rate: 225 },
+        { label: 'Creative Direction', rate: 300 },
+        { label: 'Art Direction', rate: 225 },
+        { label: 'Copywriting', rate: 200 },
+        { label: 'Design', rate: 175 },
+        { label: 'Code Writing / Development', rate: 225 },
+    ];
+
+    const [savedRates, setSavedRates] = useState<{ label: string, rate: number }[]>(() => {
+        const saved = localStorage.getItem('custom_rates');
+        return saved ? JSON.parse(saved) : [];
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.projectId || !formData.description) return;
+
+        // Save custom rate if new
+        if (activeTab === 'TIME' && formData.rate) {
+            const currentRate = parseFloat(formData.rate);
+            const isStandard = STANDARD_RATES.some(r => r.rate === currentRate);
+            const isSaved = savedRates.some(r => r.rate === currentRate);
+
+            if (!isStandard && !isSaved) {
+                const newRate = { label: 'Custom Rate', rate: currentRate };
+                const newSavedRates = [...savedRates, newRate];
+                setSavedRates(newSavedRates);
+                localStorage.setItem('custom_rates', JSON.stringify(newSavedRates));
+            }
+        }
 
         // Optimistic UI - Update immediately without waiting for server
         const logData: any = {
@@ -107,6 +140,7 @@ const Tracker: React.FC = () => {
         if (activeTab === 'TIME') {
             logData.hours = Number(formData.hours);
             logData.rateMultiplier = Number(formData.rateMultiplier || 1);
+            if (formData.rate) logData.rate = Number(formData.rate);
         } else if (activeTab === 'EXPENSE') {
             logData.cost = Number(formData.cost);
             logData.markupPercent = Number(formData.markupPercent);
@@ -153,6 +187,7 @@ const Tracker: React.FC = () => {
             description: '',
             hours: '',
             rateMultiplier: '1.0',
+            rate: '',
             cost: '',
             amount: '',
             markupPercent: '20',
@@ -171,6 +206,7 @@ const Tracker: React.FC = () => {
             description: log.description,
             hours: log.hours?.toString() || '',
             rateMultiplier: log.rateMultiplier?.toString() || '1.0',
+            rate: log.rate?.toString() || '',
             cost: log.cost?.toString() || '',
             amount: (log.type === 'FIXED_FEE' ? log.billableAmount : log.cost)?.toString() || '',
             markupPercent: log.markupPercent?.toString() || '20',
@@ -271,6 +307,52 @@ const Tracker: React.FC = () => {
 
                         {activeTab === 'TIME' && (
                             <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hourly Rate</label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val === 'custom') {
+                                                    // Keep current rate or clear? Let's clear to allow typing
+                                                    setFormData({ ...formData, rate: '' });
+                                                } else {
+                                                    setFormData({ ...formData, rate: val });
+                                                }
+                                            }}
+                                            value={
+                                                !formData.rate ? '' :
+                                                    [...STANDARD_RATES, ...savedRates].some(r => r.rate.toString() === formData.rate)
+                                                        ? formData.rate
+                                                        : 'custom'
+                                            }
+                                        >
+                                            <option value="">Default Project Rate</option>
+                                            <optgroup label="Standard Rates">
+                                                {STANDARD_RATES.map((r, i) => (
+                                                    <option key={`std-${i}`} value={r.rate}>{r.label} (${r.rate}/hr)</option>
+                                                ))}
+                                            </optgroup>
+                                            {savedRates.length > 0 && (
+                                                <optgroup label="My Custom Rates">
+                                                    {savedRates.map((r, i) => (
+                                                        <option key={`saved-${i}`} value={r.rate}>{r.label} (${r.rate}/hr)</option>
+                                                    ))}
+                                                </optgroup>
+                                            )}
+                                            <option value="custom">Custom Rate...</option>
+                                        </select>
+                                        <input
+                                            type="number"
+                                            placeholder="Rate"
+                                            className="w-24 bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                            value={formData.rate}
+                                            onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours (0.5 increments)</label>
                                     <input

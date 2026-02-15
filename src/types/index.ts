@@ -24,6 +24,7 @@ export interface LogItem {
   billableAmount?: number;
   profit?: number;
   rateMultiplier?: number; // Applies to hourly rate (e.g. 1.5 for overtime)
+  rate?: number; // Base hourly rate override (optional)
 
   // Media Spend Specific details
   mediaDetails?: {

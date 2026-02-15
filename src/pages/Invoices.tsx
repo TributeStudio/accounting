@@ -69,7 +69,7 @@ const Invoices: React.FC = () => {
         filteredLogs.forEach(l => {
             const project = projects.find(p => p.id === l.projectId);
             if (l.type === 'TIME' && l.hours && project) {
-                subtotal += l.hours * project.hourlyRate * (l.rateMultiplier || 1);
+                subtotal += l.hours * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1);
             } else if (l.billableAmount) {
                 // Covers EXPENSE, FIXED_FEE, and MEDIA_SPEND
                 subtotal += l.billableAmount;
@@ -131,9 +131,10 @@ const Invoices: React.FC = () => {
 
         const invoiceItems = filteredLogs.map(log => {
             const project = projects.find(p => p.id === log.projectId);
-            const rate = log.type === 'TIME' ? (project?.hourlyRate || 0) * (log.rateMultiplier || 1) : (log.cost || 0);
+            const hourlyRate = log.rate || project?.hourlyRate || 0;
+            const rate = log.type === 'TIME' ? hourlyRate * (log.rateMultiplier || 1) : (log.cost || 0);
             const quantity = log.type === 'TIME' ? (log.hours || 0) : 1;
-            const amount = log.type === 'TIME' ? (log.hours! * project!.hourlyRate * (log.rateMultiplier || 1)) : log.billableAmount!;
+            const amount = log.type === 'TIME' ? ((log.hours || 0) * hourlyRate * (log.rateMultiplier || 1)) : log.billableAmount!;
 
             return {
                 description: `${project?.name} - ${log.description}`,
@@ -346,7 +347,7 @@ const Invoices: React.FC = () => {
                                         const project = projects.find(p => p.id === projectId);
                                         const projectSubtotal = projectLogs.reduce((sum, log) => {
                                             const p = projects.find(proj => proj.id === log.projectId);
-                                            if (log.type === 'TIME') return sum + ((log.hours || 0) * (p?.hourlyRate || 0) * (log.rateMultiplier || 1));
+                                            if (log.type === 'TIME') return sum + ((log.hours || 0) * (log.rate || p?.hourlyRate || 0) * (log.rateMultiplier || 1));
                                             return sum + (log.billableAmount || 0);
                                         }, 0);
 
@@ -362,8 +363,9 @@ const Invoices: React.FC = () => {
                                                 {/* Items */}
                                                 {projectLogs.map((log) => {
                                                     const p = projects.find(pr => pr.id === log.projectId);
+                                                    const hourlyRate = log.rate || p?.hourlyRate || 0;
                                                     const amount = log.type === 'TIME'
-                                                        ? (log.hours! * p!.hourlyRate * (log.rateMultiplier || 1))
+                                                        ? (log.hours! * hourlyRate * (log.rateMultiplier || 1))
                                                         : log.billableAmount!;
 
                                                     return (
@@ -385,7 +387,7 @@ const Invoices: React.FC = () => {
                                                             </td>
                                                             <td className="px-8 py-6 text-sm font-bold text-slate-900 text-right tabular-nums">
                                                                 ${amount.toFixed(2)}
-                                                                {log.type === 'TIME' && <span className="block text-[10px] font-normal text-slate-400">{log.hours}h @ ${p?.hourlyRate}/h {(log.rateMultiplier || 1) !== 1 ? `(${log.rateMultiplier}x)` : ''}</span>}
+                                                                {log.type === 'TIME' && <span className="block text-[10px] font-normal text-slate-400">{log.hours}h @ ${hourlyRate}/h {(log.rateMultiplier || 1) !== 1 ? `(${log.rateMultiplier}x)` : ''}</span>}
                                                             </td>
                                                         </tr>
                                                     );
@@ -579,7 +581,7 @@ const Invoices: React.FC = () => {
                                             const project = projects.find(p => p.id === projectId);
                                             const projectSubtotal = projectLogs.reduce((sum, log) => {
                                                 const p = projects.find(proj => proj.id === log.projectId);
-                                                if (log.type === 'TIME') return sum + ((log.hours || 0) * (p?.hourlyRate || 0) * (log.rateMultiplier || 1));
+                                                if (log.type === 'TIME') return sum + ((log.hours || 0) * (log.rate || p?.hourlyRate || 0) * (log.rateMultiplier || 1));
                                                 return sum + (log.billableAmount || 0);
                                             }, 0);
 
@@ -595,7 +597,8 @@ const Invoices: React.FC = () => {
                                                     {/* Items */}
                                                     {projectLogs.map((log) => {
                                                         const project = projects.find(p => p.id === log.projectId);
-                                                        const amount = log.type === 'TIME' ? (log.hours! * project!.hourlyRate * (log.rateMultiplier || 1)) : (log.billableAmount || 0);
+                                                        const hourlyRate = log.rate || project?.hourlyRate || 0;
+                                                        const amount = log.type === 'TIME' ? (log.hours! * hourlyRate * (log.rateMultiplier || 1)) : (log.billableAmount || 0);
 
                                                         // Formatting description based on type
                                                         let description = log.description;
@@ -631,7 +634,7 @@ const Invoices: React.FC = () => {
                                                                 </td>
                                                                 <td className="py-2 text-right align-top text-slate-500">
                                                                     {/* Unit Price Display Logic - Show Effective Rate */}
-                                                                    {log.type === 'TIME' ? `$${(project!.hourlyRate * (log.rateMultiplier || 1)).toFixed(2)}` :
+                                                                    {log.type === 'TIME' ? `$${(hourlyRate * (log.rateMultiplier || 1)).toFixed(2)}` :
                                                                         log.type === 'MEDIA_SPEND' ? '-' :
                                                                             `$${log.cost}`}
 
