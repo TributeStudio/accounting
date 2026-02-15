@@ -82,6 +82,7 @@ const Projects: React.FC = () => {
     // --- SORTING & FILTERING ---
     const [sortBy, setSortBy] = useState<'CLIENT' | 'ACTIVITY' | 'NAME'>('CLIENT');
     const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
+    const [selectedClient, setSelectedClient] = useState<string>('ALL');
 
     const projectMetrics = useMemo(() => {
         const metrics: Record<string, { lastActive: string, totalBilled: number, monthBilled: number }> = {};
@@ -123,9 +124,24 @@ const Projects: React.FC = () => {
         return metrics;
     }, [projects, logs, selectedMonth]);
 
+    const availableClients = useMemo(() => {
+        return Array.from(new Set(projects.map(p => p.client))).sort();
+    }, [projects]);
+
     const sortedProjects = useMemo(() => {
         let sorted = [...projects];
 
+        // 1. Filter by Client
+        if (selectedClient !== 'ALL') {
+            sorted = sorted.filter(p => p.client === selectedClient);
+        }
+
+        // 2. Filter by Month Activity (If month selected, hide 0 billed)
+        if (selectedMonth !== 'ALL') {
+            sorted = sorted.filter(p => (projectMetrics[p.id]?.monthBilled || 0) > 0);
+        }
+
+        // 3. Sort
         if (sortBy === 'CLIENT') {
             sorted.sort((a, b) => a.client.localeCompare(b.client));
         } else if (sortBy === 'NAME') {
@@ -139,7 +155,7 @@ const Projects: React.FC = () => {
         }
 
         return sorted;
-    }, [projects, sortBy, projectMetrics]);
+    }, [projects, sortBy, projectMetrics, selectedClient, selectedMonth]);
 
     const availableMonths = useMemo(() => {
         const months = new Set<string>();
@@ -159,6 +175,17 @@ const Projects: React.FC = () => {
 
                 <div className="flex items-center gap-4">
                     <div className="flex gap-2">
+                        <select
+                            className="bg-white border-none rounded-xl px-4 py-3 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-slate-900"
+                            value={selectedClient}
+                            onChange={(e) => setSelectedClient(e.target.value)}
+                        >
+                            <option value="ALL">All Clients</option>
+                            {availableClients.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
+                        </select>
+
                         <select
                             className="bg-white border-none rounded-xl px-4 py-3 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-slate-900"
                             value={sortBy}
