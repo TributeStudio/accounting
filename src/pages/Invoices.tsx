@@ -11,6 +11,18 @@ import {
 } from '@phosphor-icons/react';
 import { COMPANY_CONFIG } from '../config/company';
 
+const LICENSE_FEES = [
+    { label: 'STOCK LICENSE: Adobe Stock Video (HD)', cost: 30.00 },
+    { label: 'STOCK LICENSE: Adobe Stock Image', cost: 10.00 },
+    { label: 'STOCK LICENSE: Yellow Image Mockup', cost: 29.99 },
+    { label: 'STOCK LICENSE: Envato Elements Mockup', cost: 14.99 },
+    { label: 'STOCK LICENSE: Artgrid Music License', cost: 14.99 },
+    { label: 'STOCK LICENSE: Premium Beats Music License', cost: 19.99 },
+    { label: 'STOCK LICENSE: AI Image Generation', cost: 5.00 },
+    { label: 'STOCK LICENSE: AI Video Generation', cost: 10.00 },
+    { label: 'STOCK LICENSE: AI Voice Generation', cost: 8.00 },
+];
+
 const Invoices: React.FC = () => {
     const { logs, projects, addInvoice, invoices, updateInvoice } = useApp();
     const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
@@ -154,10 +166,24 @@ const Invoices: React.FC = () => {
 
         const invoiceItems = filteredLogs.map(log => {
             const project = projects.find(p => p.id === log.projectId);
-            const hourlyRate = log.rate || project?.hourlyRate || 0;
-            const rate = log.type === 'TIME' ? hourlyRate * (log.rateMultiplier || 1) : (log.cost || 0);
-            const quantity = log.type === 'TIME' ? (log.hours || 0) : 1;
-            const amount = log.type === 'TIME' ? ((log.hours || 0) * hourlyRate * (log.rateMultiplier || 1)) : log.billableAmount!;
+            let quantity = 1;
+            let rate = 0;
+            let amount = 0;
+
+            if (log.type === 'TIME') {
+                const hourlyRate = (log.rate || project?.hourlyRate || 0);
+                quantity = log.hours || 0;
+                rate = hourlyRate * (log.rateMultiplier || 1);
+                amount = quantity * rate;
+            } else {
+                // Check if stock license
+                const match = LICENSE_FEES.find(f => f.label === log.description);
+                if (match && log.cost && log.cost > match.cost + 0.01) {
+                    quantity = Math.round(log.cost / match.cost);
+                }
+                amount = log.billableAmount || 0;
+                rate = quantity > 0 ? amount / quantity : 0;
+            }
 
             return {
                 description: `${project?.name} - ${log.description}`,
@@ -630,8 +656,24 @@ const Invoices: React.FC = () => {
                                                     {/* Items */}
                                                     {projectLogs.map((log) => {
                                                         const project = projects.find(p => p.id === log.projectId);
-                                                        const hourlyRate = log.rate || project?.hourlyRate || 0;
-                                                        const amount = log.type === 'TIME' ? (log.hours! * hourlyRate * (log.rateMultiplier || 1)) : (log.billableAmount || 0);
+
+                                                        let qty = 1;
+                                                        let unitPrice = 0;
+                                                        let amount = 0;
+
+                                                        if (log.type === 'TIME') {
+                                                            const hourlyRate = (log.rate || project?.hourlyRate || 0);
+                                                            qty = log.hours || 0;
+                                                            unitPrice = hourlyRate * (log.rateMultiplier || 1);
+                                                            amount = qty * unitPrice;
+                                                        } else {
+                                                            const match = LICENSE_FEES.find(f => f.label === log.description);
+                                                            if (match && log.cost && log.cost > match.cost + 0.01) {
+                                                                qty = Math.round(log.cost / match.cost);
+                                                            }
+                                                            amount = log.billableAmount || 0;
+                                                            unitPrice = qty > 0 ? amount / qty : 0;
+                                                        }
 
                                                         // Formatting description based on type
                                                         let description = log.description;
@@ -663,13 +705,11 @@ const Invoices: React.FC = () => {
                                                                     )}
                                                                 </td>
                                                                 <td className="py-2 text-center align-top text-slate-500">
-                                                                    {log.type === 'TIME' ? log.hours : '1'}
+                                                                    {log.type === 'TIME' ? qty : (qty > 1 ? qty : '-')}
                                                                 </td>
                                                                 <td className="py-2 text-right align-top text-slate-500">
                                                                     {/* Unit Price Display Logic - Show Effective Rate */}
-                                                                    {log.type === 'TIME' ? `$${(hourlyRate * (log.rateMultiplier || 1)).toFixed(2)}` :
-                                                                        log.type === 'MEDIA_SPEND' ? '-' :
-                                                                            `$${(log.cost ?? log.billableAmount ?? 0).toFixed(2)}`}
+                                                                    {log.type === 'MEDIA_SPEND' ? '-' : `$${unitPrice.toFixed(2)}`}
 
                                                                     {log.rateMultiplier && log.rateMultiplier !== 1 && (
                                                                         <div className="text-[9px] text-amber-600 font-bold mt-0.5">
