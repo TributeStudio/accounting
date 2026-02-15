@@ -132,9 +132,14 @@ const Projects: React.FC = () => {
             sorted = sorted.filter(p => p.client === selectedClient);
         }
 
-        // 2. Filter by Month Activity (If month selected, hide 0 billed)
+        // 2. Filter by Month Activity (If month selected, hide 0 billed UNLESS started in that month)
         if (selectedMonth !== 'ALL') {
-            sorted = sorted.filter(p => (projectMetrics[p.id]?.monthBilled || 0) > 0);
+            sorted = sorted.filter(p => {
+                const hasActivity = (projectMetrics[p.id]?.monthBilled || 0) > 0;
+                // Check if project started in this month
+                const startedInMonth = p.startDate && p.startDate.startsWith(selectedMonth);
+                return hasActivity || startedInMonth;
+            });
         }
 
         // 3. Sort
