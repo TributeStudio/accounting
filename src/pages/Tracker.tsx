@@ -809,19 +809,22 @@ const Tracker: React.FC = () => {
                                                     </div>
 
                                                     <div className="text-right">
-                                                        <p className={`text-sm font-bold tabular-nums ${log.status === 'PAID' ? 'text-emerald-500' : 'text-slate-900'}`}>
+                                                        <div className={`text-sm font-bold tabular-nums ${log.status === 'PAID' ? 'text-emerald-500' : 'text-slate-900'}`}>
                                                             {log.type === 'TIME' ? (
-                                                                <>
-                                                                    <span>{log.hours}h</span>
-                                                                    <span className="opacity-60 ml-1 text-xs">
-                                                                        (${((log.rate || 0) * (log.hours || 0) * (log.rateMultiplier || 1)).toFixed(2)})
+                                                                <div className="flex flex-col items-end leading-none gap-1">
+                                                                    <span className="flex items-center gap-1">
+                                                                        ${((log.rate || 0) * (log.hours || 0) * (log.rateMultiplier || 1)).toFixed(2)}
+                                                                        {log.status === 'PAID' && <span className="text-[10px] uppercase font-extrabold tracking-wider bg-emerald-100 text-emerald-700 px-1 rounded">PAID</span>}
                                                                     </span>
-                                                                </>
+                                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{log.hours}h</span>
+                                                                </div>
                                                             ) : (
-                                                                `$${log.billableAmount?.toFixed(2)}`
+                                                                <span>
+                                                                    ${log.billableAmount?.toFixed(2)}
+                                                                    {log.status === 'PAID' && <span className="ml-1 text-[10px] uppercase font-extrabold tracking-wider bg-emerald-100 text-emerald-700 px-1 rounded align-middle">PAID</span>}
+                                                                </span>
                                                             )}
-                                                            {log.status === 'PAID' && <span className="ml-1 text-[10px] uppercase font-extrabold tracking-wider bg-emerald-100 text-emerald-700 px-1 rounded align-middle">PAID</span>}
-                                                        </p>
+                                                        </div>
                                                     </div>
                                                 </div>
 
