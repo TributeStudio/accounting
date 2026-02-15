@@ -95,16 +95,24 @@ const Tracker: React.FC = () => {
     }
 
     const STANDARD_RATES = [
-        { label: 'DaVinci Resolve Edit Bay', rate: 150 },
-        { label: 'Color Grading Suite', rate: 175 },
-        { label: 'Audio Mix / VO Booth', rate: 125 },
-        { label: 'Senior Editor', rate: 250 },
-        { label: 'Motion Graphics Designer', rate: 225 },
+        // 1. Creative & Strategy Services
         { label: 'Creative Direction', rate: 300 },
         { label: 'Art Direction', rate: 225 },
         { label: 'Copywriting', rate: 200 },
         { label: 'Design', rate: 175 },
         { label: 'Code Writing / Development', rate: 225 },
+        // 2. Account Management
+        { label: 'Account Director', rate: 225 },
+        { label: 'Account Manager (Mid-Level)', rate: 165 },
+        { label: 'Account Coordinator', rate: 115 },
+        // 3. Editorial & Post-Production
+        { label: 'Senior Editor', rate: 250 },
+        { label: 'Motion Graphics Designer', rate: 225 },
+        // 4. Equipment & Facilities
+        { label: 'DaVinci Resolve Edit Bay', rate: 150 },
+        { label: 'Color Grading Suite', rate: 175 },
+        { label: 'Audio Mix / VO Booth', rate: 125 },
+        { label: 'Production Equipment Kit', rate: 100 },
     ];
 
     const [savedRates, setSavedRates] = useState<{ label: string, rate: number }[]>(() => {
