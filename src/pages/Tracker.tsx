@@ -16,6 +16,7 @@ const Tracker: React.FC = () => {
         hours: '',
         rateMultiplier: '1.0',
         rate: '',
+        rateOption: '',
         cost: '',
         amount: '', // For Fixed Fee
         markupPercent: '20',
@@ -188,6 +189,7 @@ const Tracker: React.FC = () => {
             hours: '',
             rateMultiplier: '1.0',
             rate: '',
+            rateOption: '',
             cost: '',
             amount: '',
             markupPercent: '20',
@@ -207,6 +209,7 @@ const Tracker: React.FC = () => {
             hours: log.hours?.toString() || '',
             rateMultiplier: log.rateMultiplier?.toString() || '1.0',
             rate: log.rate?.toString() || '',
+            rateOption: log.rate ? (STANDARD_RATES.findIndex(r => r.rate === log.rate) !== -1 ? `std-${STANDARD_RATES.findIndex(r => r.rate === log.rate)}` : 'custom') : '',
             cost: log.cost?.toString() || '',
             amount: (log.type === 'FIXED_FEE' ? log.billableAmount : log.cost)?.toString() || '',
             markupPercent: log.markupPercent?.toString() || '20',
@@ -315,29 +318,29 @@ const Tracker: React.FC = () => {
                                             onChange={(e) => {
                                                 const val = e.target.value;
                                                 if (val === 'custom') {
-                                                    // Keep current rate or clear? Let's clear to allow typing
-                                                    setFormData({ ...formData, rate: '' });
+                                                    setFormData({ ...formData, rate: '', rateOption: 'custom' });
+                                                } else if (val.startsWith('std-')) {
+                                                    const index = parseInt(val.split('-')[1]);
+                                                    setFormData({ ...formData, rate: STANDARD_RATES[index].rate.toString(), rateOption: val });
+                                                } else if (val.startsWith('saved-')) {
+                                                    const index = parseInt(val.split('-')[1]);
+                                                    setFormData({ ...formData, rate: savedRates[index].rate.toString(), rateOption: val });
                                                 } else {
-                                                    setFormData({ ...formData, rate: val });
+                                                    setFormData({ ...formData, rate: '', rateOption: '' });
                                                 }
                                             }}
-                                            value={
-                                                !formData.rate ? '' :
-                                                    [...STANDARD_RATES, ...savedRates].some(r => r.rate.toString() === formData.rate)
-                                                        ? formData.rate
-                                                        : 'custom'
-                                            }
+                                            value={formData.rateOption}
                                         >
                                             <option value="">Default Project Rate</option>
                                             <optgroup label="Standard Rates">
                                                 {STANDARD_RATES.map((r, i) => (
-                                                    <option key={`std-${i}`} value={r.rate}>{r.label} (${r.rate}/hr)</option>
+                                                    <option key={`std-${i}`} value={`std-${i}`}>{r.label} (${r.rate}/hr)</option>
                                                 ))}
                                             </optgroup>
                                             {savedRates.length > 0 && (
                                                 <optgroup label="My Custom Rates">
                                                     {savedRates.map((r, i) => (
-                                                        <option key={`saved-${i}`} value={r.rate}>{r.label} (${r.rate}/hr)</option>
+                                                        <option key={`saved-${i}`} value={`saved-${i}`}>{r.label} (${r.rate}/hr)</option>
                                                     ))}
                                                 </optgroup>
                                             )}
@@ -348,7 +351,7 @@ const Tracker: React.FC = () => {
                                             placeholder="Rate"
                                             className="w-24 bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
                                             value={formData.rate}
-                                            onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                                            onChange={(e) => setFormData({ ...formData, rate: e.target.value, rateOption: 'custom' })}
                                         />
                                     </div>
                                 </div>
