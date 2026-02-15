@@ -201,9 +201,11 @@ const Projects: React.FC = () => {
                             onChange={(e) => setSelectedMonth(e.target.value)}
                         >
                             <option value="ALL">All Time</option>
-                            {availableMonths.map(m => (
-                                <option key={m} value={m}>{new Date(m + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' })}</option>
-                            ))}
+                            {availableMonths.map(m => {
+                                const [y, mo] = m.split('-');
+                                const date = new Date(parseInt(y), parseInt(mo) - 1, 1);
+                                return <option key={m} value={m}>{date.toLocaleDateString('default', { month: 'long', year: 'numeric' })}</option>
+                            })}
                         </select>
                     </div>
 
