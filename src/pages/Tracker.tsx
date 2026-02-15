@@ -94,26 +94,44 @@ const Tracker: React.FC = () => {
         profit = billableAmount;
     }
 
-    const STANDARD_RATES = [
-        // 1. Creative & Strategy Services
-        { label: 'Creative Direction', rate: 300 },
-        { label: 'Art Direction', rate: 225 },
-        { label: 'Copywriting', rate: 200 },
-        { label: 'Design', rate: 175 },
-        { label: 'Code Writing / Development', rate: 225 },
-        // 2. Account Management
-        { label: 'Account Director', rate: 225 },
-        { label: 'Account Manager (Mid-Level)', rate: 165 },
-        { label: 'Account Coordinator', rate: 115 },
-        // 3. Editorial & Post-Production
-        { label: 'Senior Editor', rate: 250 },
-        { label: 'Motion Graphics Designer', rate: 225 },
-        // 4. Equipment & Facilities
-        { label: 'DaVinci Resolve Edit Bay', rate: 150 },
-        { label: 'Color Grading Suite', rate: 175 },
-        { label: 'Audio Mix / VO Booth', rate: 125 },
-        { label: 'Production Equipment Kit', rate: 100 },
+    const RATE_CATEGORIES = [
+        {
+            name: "CREATIVE & STRATEGY SERVICES",
+            rates: [
+                { label: 'Creative Direction', rate: 300 },
+                { label: 'Art Direction', rate: 225 },
+                { label: 'Copywriting', rate: 200 },
+                { label: 'Design', rate: 175 },
+                { label: 'Code Writing / Development', rate: 225 },
+            ]
+        },
+        {
+            name: "ACCOUNT MANAGEMENT",
+            rates: [
+                { label: 'Account Director', rate: 225 },
+                { label: 'Account Manager (Mid-Level)', rate: 165 },
+                { label: 'Account Coordinator', rate: 115 },
+            ]
+        },
+        {
+            name: "EDITORIAL & POST-PRODUCTION",
+            rates: [
+                { label: 'Senior Editor', rate: 250 },
+                { label: 'Motion Graphics Designer', rate: 225 },
+            ]
+        },
+        {
+            name: "EQUIPMENT & FACILITIES",
+            rates: [
+                { label: 'DaVinci Resolve Edit Bay', rate: 150 },
+                { label: 'Color Grading Suite', rate: 175 },
+                { label: 'Audio Mix / VO Booth', rate: 125 },
+                { label: 'Production Equipment Kit', rate: 100 },
+            ]
+        }
     ];
+
+    const STANDARD_RATES = RATE_CATEGORIES.flatMap(c => c.rates);
 
     const [savedRates, setSavedRates] = useState<{ label: string, rate: number }[]>(() => {
         const saved = localStorage.getItem('custom_rates');
@@ -340,11 +358,16 @@ const Tracker: React.FC = () => {
                                             value={formData.rateOption}
                                         >
                                             <option value="">Default Project Rate</option>
-                                            <optgroup label="Standard Rates">
-                                                {STANDARD_RATES.map((r, i) => (
-                                                    <option key={`std-${i}`} value={`std-${i}`}>{r.label} (${r.rate}/hr)</option>
-                                                ))}
-                                            </optgroup>
+                                            {RATE_CATEGORIES.map((category) => (
+                                                <optgroup key={category.name} label={category.name}>
+                                                    {category.rates.map((r) => {
+                                                        const i = STANDARD_RATES.indexOf(r);
+                                                        return (
+                                                            <option key={`std-${i}`} value={`std-${i}`}>{r.label} (${r.rate}/hr)</option>
+                                                        );
+                                                    })}
+                                                </optgroup>
+                                            ))}
                                             {savedRates.length > 0 && (
                                                 <optgroup label="My Custom Rates">
                                                     {savedRates.map((r, i) => (
