@@ -233,11 +233,7 @@ const Projects: React.FC = () => {
                                 <User size={14} weight="duotone" className="opacity-50" /> {project.client}
                             </p>
 
-                            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate</p>
-                                    <p className="text-lg font-bold text-slate-900 tabular-nums">${project.hourlyRate}<span className="text-sm font-normal text-slate-400">/hr</span></p>
-                                </div>
+                            <div className="pt-6 border-t border-slate-50">
                                 <div>
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
                                         {selectedMonth === 'ALL' ? 'Total Billed' : 'Billed (Mo)'}
