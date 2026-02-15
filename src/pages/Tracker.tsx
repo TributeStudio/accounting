@@ -683,7 +683,16 @@ const Tracker: React.FC = () => {
 
                                                     <div className="text-right">
                                                         <p className={`text-sm font-bold tabular-nums ${log.status === 'PAID' ? 'text-emerald-500' : 'text-slate-900'}`}>
-                                                            {log.type === 'TIME' ? `${log.hours}h` : `$${log.billableAmount?.toFixed(2)}`}
+                                                            {log.type === 'TIME' ? (
+                                                                <>
+                                                                    <span>{log.hours}h</span>
+                                                                    <span className="opacity-60 ml-1 text-xs">
+                                                                        (${((log.rate || 0) * (log.hours || 0) * (log.rateMultiplier || 1)).toFixed(2)})
+                                                                    </span>
+                                                                </>
+                                                            ) : (
+                                                                `$${log.billableAmount?.toFixed(2)}`
+                                                            )}
                                                             {log.status === 'PAID' && <span className="ml-1 text-[10px] uppercase font-extrabold tracking-wider bg-emerald-100 text-emerald-700 px-1 rounded align-middle">PAID</span>}
                                                         </p>
                                                     </div>
