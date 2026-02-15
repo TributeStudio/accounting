@@ -14,6 +14,7 @@ const Tracker: React.FC = () => {
         { label: 'STOCK LICENSE: Premium Beats Music License', cost: 19.99 },
         { label: 'STOCK LICENSE: AI Image Generation', cost: 5.00 },
         { label: 'STOCK LICENSE: AI Video Generation', cost: 10.00 },
+        { label: 'STOCK LICENSE: AI Voice Generation', cost: 8.00 },
     ];
     const { projects, logs, addLog, updateLog, deleteLog } = useApp();
     const [activeTab, setActiveTab] = useState<LogType>('TIME');
