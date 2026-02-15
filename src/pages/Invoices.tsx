@@ -37,6 +37,7 @@ const Invoices: React.FC = () => {
     // Invoice Terms State
     const [paymentTerms, setPaymentTerms] = useState('DUE_ON_RECEIPT');
     const [customDueDate, setCustomDueDate] = useState('');
+    const [writeOffExcess, setWriteOffExcess] = useState(false);
 
     const [showPreview, setShowPreview] = useState(false);
     const [emailLoading, setEmailLoading] = useState(false);
@@ -95,23 +96,55 @@ const Invoices: React.FC = () => {
     }, [selectedClientId, selectedProjectId, dateFilterType, selectedMonth, dateRange, logs, projects]);
 
     const totals = useMemo(() => {
+        let timeTotal = 0;
+        let expenseTotal = 0;
         let subtotal = 0;
         let paidAmount = 0;
+
         filteredLogs.forEach(l => {
             const project = projects.find(p => p.id === l.projectId);
             let amount = 0;
             if (l.type === 'TIME' && l.hours && project) {
                 amount = l.hours * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1);
+                timeTotal += amount;
             } else if (l.billableAmount) {
                 amount = l.billableAmount;
+                expenseTotal += amount;
             }
             subtotal += amount;
             if (l.status === 'PAID') {
                 paidAmount += amount;
             }
         });
-        return { subtotal, tax: subtotal * 0, total: subtotal, paidAmount, balanceDue: subtotal - paidAmount };
-    }, [filteredLogs, projects]);
+
+        let discount = 0;
+        // If Write Off Excess is enabled, we waive the Time portion of the balance
+        // Assumes Expenses are always due.
+        // Balance = (Time + Expense) - Paid.
+        // Target = Expense (assuming unpaid) or 0 if Paid > Total.
+        // We credit the "Time" portion of the Balance.
+        if (writeOffExcess) {
+            const currentBalance = subtotal - paidAmount;
+            // We assume paidAmount covers Retainer (Expense) first? Or generic?
+            // "Only time can be billed against retainer".
+            // So PaidAmount (Retainer) covers Time.
+            // If PaidAmount covers everything, Balance is 0.
+            // If Balance > 0, and we want to write off Time:
+            // We calculate effective Expense Due. 
+            // If Expenses are not paid, they are due.
+            // Simplistic: Waiver = Balance Due - Expenses Due.
+            // But we don't track "Paid Expenses" specifically vs "Paid Time".
+            // Let's assume ALL Expenses are Due unless PaidAmount > TimeTotal?
+            // Safer: Waiver = CurrentBalance - (ExpenseTotal * 0.0? No).
+            // Let's assume Retainer (Paid) covers Time.
+            // So Expenses are added on top.
+            // So Expected Due = ExpenseTotal.
+            // Waiver = Math.max(0, currentBalance - expenseTotal);
+            discount = Math.max(0, currentBalance - expenseTotal);
+        }
+
+        return { timeTotal, expenseTotal, subtotal, tax: subtotal * 0, total: subtotal, paidAmount, discount, balanceDue: subtotal - paidAmount - discount };
+    }, [filteredLogs, projects, writeOffExcess]);
 
     const calculateDueDate = () => {
         const today = new Date();
@@ -365,6 +398,18 @@ const Invoices: React.FC = () => {
                                     onChange={(e) => setCustomDueDate(e.target.value)}
                                 />
                             )}
+                        </div>
+
+                        <div className="space-y-1 flex items-center">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={writeOffExcess}
+                                    onChange={e => setWriteOffExcess(e.target.checked)}
+                                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Write-off Excess Time</span>
+                            </label>
                         </div>
                     </div>
 
@@ -630,174 +675,145 @@ const Invoices: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-[11px]">
-                                        {/* Group items by Project */}
-                                        {Object.entries(filteredLogs.reduce((groups, log) => {
+                                        {/* Services / Time Section */}
+                                        <tr className="bg-slate-50 border-y border-slate-100">
+                                            <td colSpan={4} className="py-2 px-4 font-bold text-slate-900 uppercase tracking-wider text-[10px]">Services / Time</td>
+                                        </tr>
+                                        {Object.entries(filteredLogs.filter(l => l.type === 'TIME').reduce((groups, log) => {
                                             const pid = log.projectId;
                                             if (!groups[pid]) groups[pid] = [];
                                             groups[pid].push(log);
                                             return groups;
-                                        }, {} as Record<string, typeof filteredLogs>)).map(([projectId, projectLogs]) => {
-                                            const project = projects.find(p => p.id === projectId);
-                                            const projectSubtotal = projectLogs.reduce((sum, log) => {
-                                                const p = projects.find(proj => proj.id === log.projectId);
-                                                if (log.type === 'TIME') return sum + ((log.hours || 0) * (log.rate || p?.hourlyRate || 0) * (log.rateMultiplier || 1));
-                                                return sum + (log.billableAmount || 0);
-                                            }, 0);
+                                        }, {} as Record<string, typeof filteredLogs>)).map(([projectId, projectLogs]) => (
+                                            <React.Fragment key={`time-${projectId}`}>
+                                                {/* Project Header */}
+                                                <tr className="border-b border-slate-50">
+                                                    <td colSpan={4} className="py-2 px-0 font-bold text-slate-500 uppercase tracking-wider text-[10px] pl-6">
+                                                        {projects.find(p => p.id === projectId)?.name || 'Unassigned'}
+                                                    </td>
+                                                </tr>
+                                                {projectLogs.map((log) => {
+                                                    const project = projects.find(p => p.id === log.projectId);
+                                                    const hourlyRate = (log.rate || project?.hourlyRate || 0);
+                                                    const qty = log.hours || 0;
+                                                    const unitPrice = hourlyRate * (log.rateMultiplier || 1);
+                                                    const amount = qty * unitPrice;
 
-                                            return (
-                                                <React.Fragment key={projectId}>
-                                                    {/* Project Header */}
-                                                    <tr className="bg-slate-50 border-y border-slate-100">
-                                                        <td colSpan={4} className="py-2 px-0 font-bold text-slate-900 uppercase tracking-wider text-[10px] pl-2">
-                                                            Project: {project?.name || 'Unassigned'}
-                                                        </td>
-                                                    </tr>
+                                                    return (
+                                                        <tr key={log.id}>
+                                                            <td className="py-2 pr-4 pl-8 align-top">
+                                                                <span className="text-slate-500">{log.description}</span>
+                                                            </td>
+                                                            <td className="py-2 text-center align-top text-slate-500">{qty}</td>
+                                                            <td className="py-2 text-right align-top text-slate-500">${unitPrice.toFixed(2)}</td>
+                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toFixed(2)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </React.Fragment>
+                                        ))}
 
-                                                    {/* Items */}
-                                                    {projectLogs.map((log) => {
-                                                        const project = projects.find(p => p.id === log.projectId);
+                                        {/* Expenses Section */}
+                                        <tr className="bg-slate-50 border-y border-slate-100">
+                                            <td colSpan={4} className="py-2 px-4 font-bold text-slate-900 uppercase tracking-wider text-[10px]">Expenses & Fees</td>
+                                        </tr>
+                                        {Object.entries(filteredLogs.filter(l => l.type !== 'TIME').reduce((groups, log) => {
+                                            const pid = log.projectId;
+                                            if (!groups[pid]) groups[pid] = [];
+                                            groups[pid].push(log);
+                                            return groups;
+                                        }, {} as Record<string, typeof filteredLogs>)).map(([projectId, projectLogs]) => (
+                                            <React.Fragment key={`expense-${projectId}`}>
+                                                {/* Project Header */}
+                                                <tr className="border-b border-slate-50">
+                                                    <td colSpan={4} className="py-2 px-0 font-bold text-slate-500 uppercase tracking-wider text-[10px] pl-6">
+                                                        {projects.find(p => p.id === projectId)?.name || 'Unassigned'}
+                                                    </td>
+                                                </tr>
+                                                {projectLogs.map((log) => {
+                                                    const project = projects.find(p => p.id === log.projectId);
+                                                    let qty = 1;
+                                                    let unitPrice = 0;
+                                                    let amount = log.billableAmount || 0;
 
-                                                        let qty = 1;
-                                                        let unitPrice = 0;
-                                                        let amount = 0;
+                                                    const match = LICENSE_FEES.find(f => f.label === log.description);
+                                                    if (match && log.cost && log.cost > match.cost + 0.01) {
+                                                        qty = Math.round(log.cost / match.cost);
+                                                    }
+                                                    unitPrice = qty > 0 ? amount / qty : 0;
 
-                                                        if (log.type === 'TIME') {
-                                                            const hourlyRate = (log.rate || project?.hourlyRate || 0);
-                                                            qty = log.hours || 0;
-                                                            unitPrice = hourlyRate * (log.rateMultiplier || 1);
-                                                            amount = qty * unitPrice;
-                                                        } else {
-                                                            const match = LICENSE_FEES.find(f => f.label === log.description);
-                                                            if (match && log.cost && log.cost > match.cost + 0.01) {
-                                                                qty = Math.round(log.cost / match.cost);
-                                                            }
-                                                            amount = log.billableAmount || 0;
-                                                            unitPrice = qty > 0 ? amount / qty : 0;
-                                                        }
+                                                    let description = log.description;
+                                                    let subDescription: any = null;
 
-                                                        // Formatting description based on type
-                                                        let description = log.description;
-                                                        let subDescription = '';
-
-                                                        if (log.type === 'MEDIA_SPEND' && log.mediaDetails) {
-                                                            description = `Media Management Fees - ${log.mediaDetails.billingMonth}`;
-                                                            subDescription = (
-                                                                <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
-                                                                    <div>Google Spend: ${log.mediaDetails.googleSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                                                    <div>Meta Spend: ${log.mediaDetails.metaSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                                                    <div className="text-slate-400 italic">Annual Run Rate: ${log.mediaDetails.annualSpendRunningTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                                                                </div>
-                                                            ) as any;
-                                                        } else {
-                                                            subDescription = <span className="text-slate-500">{log.description}</span> as any;
-                                                        }
-
-                                                        return (
-                                                            <tr key={log.id}>
-                                                                <td className="py-2 pr-4 pl-4 align-top">
-                                                                    {log.type === 'MEDIA_SPEND' ? (
-                                                                        <>
-                                                                            <span className="font-medium text-slate-900">{description}</span>
-                                                                            {subDescription}
-                                                                        </>
-                                                                    ) : (
-                                                                        <span className="text-slate-500">{description}</span>
-                                                                    )}
-                                                                </td>
-                                                                <td className="py-2 text-center align-top text-slate-500">
-                                                                    {log.type === 'TIME' ? qty : (qty > 1 ? qty : '-')}
-                                                                </td>
-                                                                <td className="py-2 text-right align-top text-slate-500">
-                                                                    {/* Unit Price Display Logic - Show Effective Rate */}
-                                                                    {log.type === 'MEDIA_SPEND' ? '-' : `$${unitPrice.toFixed(2)}`}
-
-                                                                    {log.rateMultiplier && log.rateMultiplier !== 1 && (
-                                                                        <div className="text-[9px] text-amber-600 font-bold mt-0.5">
-                                                                            {log.rateMultiplier}x Premium
-                                                                        </div>
-                                                                    )}
-                                                                </td>
-                                                                <td className="py-2 text-right align-top font-bold text-slate-900">
-                                                                    ${amount.toFixed(2)}
-                                                                </td>
-                                                            </tr>
+                                                    if (log.type === 'MEDIA_SPEND' && log.mediaDetails) {
+                                                        description = `Media Management Fees - ${log.mediaDetails.billingMonth}`;
+                                                        subDescription = (
+                                                            <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
+                                                                <div>Google Spend: ${log.mediaDetails.googleSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                                <div>Meta Spend: ${log.mediaDetails.metaSpend.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                                                            </div>
                                                         );
-                                                    })}
+                                                    }
 
-                                                    {/* Project Subtotal */}
-                                                    <tr className="border-b border-slate-100">
-                                                        <td colSpan={3} className="py-2 text-right pr-4 text-slate-400 font-bold text-[10px] uppercase tracking-wider">
-                                                            Subtotal ({project?.name})
-                                                        </td>
-                                                        <td className="py-2 text-right font-bold text-slate-900 border-t border-slate-100">
-                                                            ${projectSubtotal.toFixed(2)}
-                                                        </td>
-                                                    </tr>
-                                                </React.Fragment>
-                                            );
-                                        })}
+                                                    return (
+                                                        <tr key={log.id}>
+                                                            <td className="py-2 pr-4 pl-8 align-top">
+                                                                <span className="font-medium text-slate-900">{description}</span>
+                                                                {subDescription}
+                                                            </td>
+                                                            <td className="py-2 text-center align-top text-slate-500">{qty > 1 ? qty : '-'}</td>
+                                                            <td className="py-2 text-right align-top text-slate-500">{log.type === 'MEDIA_SPEND' ? '-' : `$${unitPrice.toFixed(2)}`}</td>
+                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toFixed(2)}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </React.Fragment>
+                                        ))}
                                     </tbody>
                                 </table>
 
                                 {/* Totals Section */}
                                 <div className="flex justify-end border-t border-slate-200 pt-4">
-                                    <div className="w-48 text-[11px]">
+                                    <div className="w-64 text-[11px]">
                                         <div className="flex justify-between mb-1 text-slate-500">
+                                            <span>Services Subtotal</span>
+                                            <span>${totals.timeTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-1 text-slate-500">
+                                            <span>Expenses & Fees Subtotal</span>
+                                            <span>${totals.expenseTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-1 text-slate-900 font-bold border-t border-slate-100 pt-1 mt-1">
                                             <span>Subtotal</span>
                                             <span>${totals.subtotal.toFixed(2)}</span>
                                         </div>
                                         {totals.paidAmount > 0 && (
                                             <div className="flex justify-between mb-1 text-emerald-600 font-bold">
-                                                <span>Less: Paid/Retainer</span>
+                                                <span>Less: Paid / Retainer</span>
                                                 <span>-${totals.paidAmount.toFixed(2)}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between mb-2 text-slate-500">
-                                            <span>Tax</span>
-                                            <span>$0.00</span>
-                                        </div>
-                                        <div className="flex justify-between font-bold text-sm text-slate-900 border-t border-slate-200 pt-2">
+                                        {totals.discount > 0 && (
+                                            <div className="flex justify-between mb-1 text-emerald-600 font-bold">
+                                                <span>Value Added Adjustment</span>
+                                                <span>-${totals.discount.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between font-bold text-sm text-slate-900 border-t border-slate-200 pt-2 mt-2">
                                             <span>Amount Due</span>
                                             <span>${totals.balanceDue.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Footer */}
-                                <div className="mt-12 pt-8 border-t border-slate-100 text-center">
-                                    <div className="mb-8 text-[10px] text-slate-500 leading-relaxed font-medium">
-                                        <p className="font-bold uppercase tracking-widest text-slate-400 mb-2">Remit Payment To</p>
-                                        <p>{COMPANY_CONFIG.bank.name}</p>
-                                        <p>{COMPANY_CONFIG.bank.address}</p>
-                                        <p>Routing No: {COMPANY_CONFIG.bank.routing} &nbsp;&bull;&nbsp; Account No: {COMPANY_CONFIG.bank.account}</p>
-                                    </div>
-                                    <p className="text-[10px] text-slate-300">Thank you for your business.</p>
+                                {/* Footer Notes */}
+                                <div className="mt-12 pt-8 border-t border-slate-100">
+                                    <p className="text-center text-[10px] text-slate-400 font-medium tracking-wide uppercase">
+                                        Thank you for your business
+                                    </p>
                                 </div>
                             </div>
                         </div>
-
-                        {/* AI Email Draft Panel */}
-                        {emailDraft && (
-                            <div className="bg-slate-50 p-8 border-t border-slate-100 animate-in slide-in-from-bottom duration-500 print:hidden">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="font-bold flex items-center gap-2 text-slate-900">
-                                        <Sparkle size={16} weight="fill" className="text-amber-500" />
-                                        AI-Powered Email Draft
-                                    </h3>
-                                    <button onClick={() => setEmailDraft(null)} className="text-slate-400 hover:text-slate-600">
-                                        <X size={16} weight="bold" />
-                                    </button>
-                                </div>
-                                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-                                    <pre className="whitespace-pre-wrap font-sans text-sm text-slate-700 leading-relaxed">
-                                        {emailDraft}
-                                    </pre>
-                                </div>
-                                <button onClick={() => navigator.clipboard.writeText(emailDraft)} className="mt-4 flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold mx-auto">
-                                    Copy to Clipboard
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
