@@ -248,6 +248,16 @@ const Tracker: React.FC = () => {
     const availableLogMonths = React.useMemo(() => {
         const ms = new Set<string>();
         logs.forEach(l => ms.add(l.date.substring(0, 7)));
+
+        const d = new Date();
+        d.setDate(1);
+        for (let i = 0; i < 24; i++) {
+            const y = d.getFullYear();
+            const mo = String(d.getMonth() + 1).padStart(2, '0');
+            ms.add(`${y}-${mo}`);
+            d.setMonth(d.getMonth() - 1);
+        }
+
         return Array.from(ms).sort().reverse();
     }, [logs]);
 
