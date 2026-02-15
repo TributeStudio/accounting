@@ -16,6 +16,7 @@ export interface LogItem {
   date: string;
   description: string;
   type: LogType;
+  status?: 'PENDING' | 'INVOICED' | 'PAID';
   // Time specific
   hours?: number;
   // Expense/Fee specific

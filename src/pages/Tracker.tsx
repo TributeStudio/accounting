@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Faders, Briefcase } from '@phosphor-icons/react';
+import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Faders, Briefcase, CurrencyDollar } from '@phosphor-icons/react';
 import type { LogItem, LogType } from '../types';
 
 const Tracker: React.FC = () => {
@@ -244,6 +244,11 @@ const Tracker: React.FC = () => {
             billingMonth: log.mediaDetails?.billingMonth || new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleTogglePaid = async (log: LogItem) => {
+        const newStatus = log.status === 'PAID' ? 'PENDING' : 'PAID';
+        await updateLog(log.id, { status: newStatus });
     };
 
     const handleDelete = async (id: string) => {
@@ -625,14 +630,22 @@ const Tracker: React.FC = () => {
                                                     </div>
 
                                                     <div className="text-right">
-                                                        <p className="text-sm font-bold text-slate-900 tabular-nums">
+                                                        <p className={`text-sm font-bold tabular-nums ${log.status === 'PAID' ? 'text-emerald-500' : 'text-slate-900'}`}>
                                                             {log.type === 'TIME' ? `${log.hours}h` : `$${log.billableAmount?.toFixed(2)}`}
+                                                            {log.status === 'PAID' && <span className="ml-1 text-[10px] uppercase font-extrabold tracking-wider bg-emerald-100 text-emerald-700 px-1 rounded align-middle">PAID</span>}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 <div className="absolute right-0 top-0 -mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex justify-end">
                                                     <div className="bg-white shadow-sm border border-slate-100 rounded-lg flex p-1 gap-1">
+                                                        <button
+                                                            onClick={() => handleTogglePaid(log)}
+                                                            className={`p-1 rounded transition-colors ${log.status === 'PAID' ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100' : 'hover:bg-slate-50 text-slate-400 hover:text-emerald-500'}`}
+                                                            title={log.status === 'PAID' ? "Mark as Unpaid" : "Mark as Paid"}
+                                                        >
+                                                            <CurrencyDollar size={14} weight={log.status === 'PAID' ? "fill" : "bold"} />
+                                                        </button>
                                                         <button
                                                             onClick={() => handleEdit(log)}
                                                             className="p-1 hover:bg-slate-50 text-slate-400 hover:text-slate-900 rounded transition-colors"
