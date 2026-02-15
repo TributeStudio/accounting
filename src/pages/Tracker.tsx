@@ -354,10 +354,10 @@ const Tracker: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours (0.5 increments)</label>
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours (0.25 increments)</label>
                                     <input
                                         type="number"
-                                        step="0.5"
+                                        step="0.25"
                                         min="0"
                                         placeholder="0.00"
                                         required
@@ -370,8 +370,8 @@ const Tracker: React.FC = () => {
                                         onBlur={(e) => {
                                             const val = parseFloat(e.target.value);
                                             if (!isNaN(val)) {
-                                                // Round to nearest 0.5
-                                                const rounded = Math.round(val * 2) / 2;
+                                                // Round to nearest 0.25
+                                                const rounded = Math.round(val * 4) / 4;
                                                 setFormData({ ...formData, hours: rounded.toString() });
                                             }
                                         }}
