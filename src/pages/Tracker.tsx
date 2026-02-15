@@ -717,6 +717,18 @@ const Tracker: React.FC = () => {
                                             </div>
                                         ))}
                                     </div>
+
+                                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/50 -mx-6 -mb-6 px-6 py-4">
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Total</span>
+                                        <span className="text-lg font-bold text-slate-900 tabular-nums">
+                                            ${projectLogs.reduce((acc, l) => {
+                                                const amount = l.type === 'TIME'
+                                                    ? (l.rate || 0) * (l.hours || 0) * (l.rateMultiplier || 1)
+                                                    : (l.billableAmount || 0);
+                                                return acc + amount;
+                                            }, 0).toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
                             );
                         })}
