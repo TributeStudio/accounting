@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Plus, UserSquare, User, Pencil, Trash } from '@phosphor-icons/react';
 import type { Project } from '../types';
@@ -79,6 +79,76 @@ const Projects: React.FC = () => {
         handleCloseModal();
     };
 
+    // --- SORTING & FILTERING ---
+    const [sortBy, setSortBy] = useState<'CLIENT' | 'ACTIVITY' | 'NAME'>('CLIENT');
+    const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
+
+    const projectMetrics = useMemo(() => {
+        const metrics: Record<string, { lastActive: string, totalBilled: number, monthBilled: number }> = {};
+
+        projects.forEach(p => {
+            const projectLogs = logs.filter(l => l.projectId === p.id);
+            if (projectLogs.length === 0) {
+                metrics[p.id] = { lastActive: '0000-00-00', totalBilled: 0, monthBilled: 0 };
+                return;
+            }
+
+            // Sort logs by date desc to find last active
+            projectLogs.sort((a, b) => b.date.localeCompare(a.date));
+            const lastActive = projectLogs[0].date;
+
+            // Calculate totals
+            let total = 0;
+            let monthTotal = 0;
+
+            projectLogs.forEach(l => {
+                // Calculate amount for this log
+                let amount = 0;
+                if (l.type === 'TIME') {
+                    amount = (l.hours || 0) * (l.rate || p.hourlyRate) * (l.rateMultiplier || 1);
+                } else {
+                    amount = l.billableAmount || 0;
+                }
+
+                total += amount;
+
+                if (l.date.startsWith(selectedMonth)) {
+                    monthTotal += amount;
+                }
+            });
+
+            metrics[p.id] = { lastActive, totalBilled: total, monthBilled: monthTotal };
+        });
+
+        return metrics;
+    }, [projects, logs, selectedMonth]);
+
+    const sortedProjects = useMemo(() => {
+        let sorted = [...projects];
+
+        if (sortBy === 'CLIENT') {
+            sorted.sort((a, b) => a.client.localeCompare(b.client));
+        } else if (sortBy === 'NAME') {
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortBy === 'ACTIVITY') {
+            sorted.sort((a, b) => {
+                const ma = projectMetrics[a.id]?.lastActive || '0000-00-00';
+                const mb = projectMetrics[b.id]?.lastActive || '0000-00-00';
+                return mb.localeCompare(ma);
+            });
+        }
+
+        return sorted;
+    }, [projects, sortBy, projectMetrics]);
+
+    const availableMonths = useMemo(() => {
+        const months = new Set<string>();
+        logs.forEach(l => {
+            if (l.date) months.add(l.date.substring(0, 7));
+        });
+        return Array.from(months).sort().reverse();
+    }, [logs]);
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -86,72 +156,100 @@ const Projects: React.FC = () => {
                     <h1 className="text-4xl font-bold text-slate-900 mb-2">Projects</h1>
                     <p className="text-slate-500">Manage your clients and active engagements.</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
-                    className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg"
-                >
-                    <Plus size={18} weight="bold" /> Project
-                </button>
+
+                <div className="flex items-center gap-4">
+                    <div className="flex gap-2">
+                        <select
+                            className="bg-white border-none rounded-xl px-4 py-3 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-slate-900"
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                        >
+                            <option value="CLIENT">Sort by Client</option>
+                            <option value="ACTIVITY">Sort by Recent</option>
+                            <option value="NAME">Sort by Name</option>
+                        </select>
+
+                        <select
+                            className="bg-white border-none rounded-xl px-4 py-3 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-slate-900"
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                        >
+                            <option value="ALL">All Time</option>
+                            {availableMonths.map(m => (
+                                <option key={m} value={m}>{new Date(m + '-01').toLocaleDateString('default', { month: 'long', year: 'numeric' })}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={() => setShowAddModal(true)}
+                        className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-colors shadow-lg"
+                    >
+                        <Plus size={18} weight="bold" /> Project
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((project) => (
-                    <div key={project.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl transition-all duration-300 relative">
-                        <div className="flex justify-between items-start mb-6">
-                            <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                                <UserSquare size={24} weight="duotone" />
+                {sortedProjects.map((project) => {
+                    const billed = selectedMonth === 'ALL'
+                        ? projectMetrics[project.id]?.totalBilled
+                        : projectMetrics[project.id]?.monthBilled;
+
+                    return (
+                        <div key={project.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl transition-all duration-300 relative">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                    <UserSquare size={24} weight="duotone" />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handleEdit(project)}
+                                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                                        title="Edit Project"
+                                    >
+                                        <Pencil size={18} weight="bold" />
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(project.id)}
+                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                        title="Delete Project"
+                                    >
+                                        <Trash size={18} weight="bold" />
+                                    </button>
+                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
+                                        ? 'bg-emerald-50 text-emerald-600'
+                                        : project.status === 'COMPLETED'
+                                            ? 'bg-blue-50 text-blue-600'
+                                            : 'bg-slate-100 text-slate-500'
+                                        }`}>
+                                        {project.status}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => handleEdit(project)}
-                                    className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                                    title="Edit Project"
-                                >
-                                    <Pencil size={18} weight="bold" />
-                                </button>
-                                <button
-                                    onClick={() => handleDelete(project.id)}
-                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                    title="Delete Project"
-                                >
-                                    <Trash size={18} weight="bold" />
-                                </button>
-                                <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
-                                    ? 'bg-emerald-50 text-emerald-600'
-                                    : project.status === 'COMPLETED'
-                                        ? 'bg-blue-50 text-blue-600'
-                                        : 'bg-slate-100 text-slate-500'
-                                    }`}>
-                                    {project.status}
-                                </span>
+
+                            <h3 className="text-xl font-bold text-slate-900 mb-1">{project.name}</h3>
+                            <p className="text-sm text-slate-500 mb-6 flex items-center gap-1">
+                                <User size={14} weight="duotone" className="opacity-50" /> {project.client}
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate</p>
+                                    <p className="text-lg font-bold text-slate-900 tabular-nums">${project.hourlyRate}<span className="text-sm font-normal text-slate-400">/hr</span></p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                                        {selectedMonth === 'ALL' ? 'Total Billed' : 'Billed (Mo)'}
+                                    </p>
+                                    <p className="text-lg font-bold text-slate-900 tabular-nums">
+                                        ${(billed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-
-                        <h3 className="text-xl font-bold text-slate-900 mb-1">{project.name}</h3>
-                        <p className="text-sm text-slate-500 mb-6 flex items-center gap-1">
-                            <User size={14} weight="duotone" className="opacity-50" /> {project.client}
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-4 pt-6 border-t border-slate-50">
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate</p>
-                                <p className="text-lg font-bold text-slate-900 tabular-nums">${project.hourlyRate}<span className="text-sm font-normal text-slate-400">/hr</span></p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Billed</p>
-                                <p className="text-lg font-bold text-slate-900 tabular-nums">
-                                    ${logs
-                                        .filter(l => l.projectId === project.id)
-                                        .reduce((sum, l) => {
-                                            if (l.type === 'TIME') return sum + ((l.hours || 0) * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1));
-                                            return sum + (l.billableAmount || 0);
-                                        }, 0)
-                                        .toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
             {showAddModal && (
