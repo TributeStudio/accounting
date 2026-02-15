@@ -72,16 +72,21 @@ const Invoices: React.FC = () => {
 
     const totals = useMemo(() => {
         let subtotal = 0;
+        let paidAmount = 0;
         filteredLogs.forEach(l => {
             const project = projects.find(p => p.id === l.projectId);
+            let amount = 0;
             if (l.type === 'TIME' && l.hours && project) {
-                subtotal += l.hours * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1);
+                amount = l.hours * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1);
             } else if (l.billableAmount) {
-                // Covers EXPENSE, FIXED_FEE, and MEDIA_SPEND
-                subtotal += l.billableAmount;
+                amount = l.billableAmount;
+            }
+            subtotal += amount;
+            if (l.status === 'PAID') {
+                paidAmount += amount;
             }
         });
-        return { subtotal, tax: subtotal * 0, total: subtotal };
+        return { subtotal, tax: subtotal * 0, total: subtotal, paidAmount, balanceDue: subtotal - paidAmount };
     }, [filteredLogs, projects]);
 
     const calculateDueDate = () => {
@@ -409,8 +414,18 @@ const Invoices: React.FC = () => {
                                 </tbody>
                                 <tfoot>
                                     <tr className="bg-slate-50/50">
-                                        <td colSpan={3} className="px-8 py-8 text-right font-bold text-lg">Invoice Total</td>
-                                        <td className="px-8 py-8 text-right font-bold text-2xl text-slate-900">${totals.total.toFixed(2)}</td>
+                                        <td colSpan={3} className="px-8 py-4 text-right font-bold text-slate-500 uppercase text-xs">Total Value</td>
+                                        <td className="px-8 py-4 text-right font-bold text-lg text-slate-500">${totals.total.toFixed(2)}</td>
+                                    </tr>
+                                    {totals.paidAmount > 0 && (
+                                        <tr className="bg-slate-50/50">
+                                            <td colSpan={3} className="px-8 py-2 text-right font-bold text-emerald-600 uppercase text-xs">Less: Paid / Retainer</td>
+                                            <td className="px-8 py-2 text-right font-bold text-lg text-emerald-600">-${totals.paidAmount.toFixed(2)}</td>
+                                        </tr>
+                                    )}
+                                    <tr className="bg-slate-50/50 border-t border-slate-200">
+                                        <td colSpan={3} className="px-8 py-8 text-right font-bold text-xl">Balance Due</td>
+                                        <td className="px-8 py-8 text-right font-bold text-2xl text-slate-900">${totals.balanceDue.toFixed(2)}</td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -677,15 +692,21 @@ const Invoices: React.FC = () => {
                                     <div className="w-48 text-[11px]">
                                         <div className="flex justify-between mb-1 text-slate-500">
                                             <span>Subtotal</span>
-                                            <span>${totals.total.toFixed(2)}</span>
+                                            <span>${totals.subtotal.toFixed(2)}</span>
                                         </div>
+                                        {totals.paidAmount > 0 && (
+                                            <div className="flex justify-between mb-1 text-emerald-600 font-bold">
+                                                <span>Less: Paid/Retainer</span>
+                                                <span>-${totals.paidAmount.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between mb-2 text-slate-500">
                                             <span>Tax</span>
                                             <span>$0.00</span>
                                         </div>
                                         <div className="flex justify-between font-bold text-sm text-slate-900 border-t border-slate-200 pt-2">
-                                            <span>Total</span>
-                                            <span>${totals.total.toFixed(2)}</span>
+                                            <span>Amount Due</span>
+                                            <span>${totals.balanceDue.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
