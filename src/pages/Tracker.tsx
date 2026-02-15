@@ -9,6 +9,7 @@ const Tracker: React.FC = () => {
     const [success, setSuccess] = useState(false);
     const [editingLogId, setEditingLogId] = useState<string | null>(null);
 
+    const [selectedClient, setSelectedClient] = useState<string>('');
     const [formData, setFormData] = useState({
         projectId: '',
         date: new Date().toISOString().split('T')[0],
@@ -208,6 +209,7 @@ const Tracker: React.FC = () => {
     };
 
     const resetForm = () => {
+        setSelectedClient('');
         setFormData({
             projectId: '',
             date: new Date().toISOString().split('T')[0],
@@ -225,9 +227,30 @@ const Tracker: React.FC = () => {
         });
     };
 
+    const uniqueClients = React.useMemo(() => Array.from(new Set(projects.map(p => p.client))).sort(), [projects]);
+
+    const { projectsByMonth, sortedMonthKeys } = React.useMemo(() => {
+        const filtered = selectedClient ? projects.filter(p => p.client === selectedClient) : [];
+        const grouped = filtered.reduce((acc, p) => {
+            const d = p.startDate ? p.startDate.substring(0, 7) : 'Unknown Start Date';
+            if (!acc[d]) acc[d] = [];
+            acc[d].push(p);
+            return acc;
+        }, {} as Record<string, typeof projects>);
+
+        const sortedKeys = Object.keys(grouped).sort().reverse();
+        Object.values(grouped).forEach(list => list.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || '')));
+
+        return { projectsByMonth: grouped, sortedMonthKeys: sortedKeys };
+    }, [projects, selectedClient]);
+
     const handleEdit = (log: LogItem) => {
         setEditingLogId(log.id);
         setActiveTab(log.type);
+
+        const p = projects.find(proj => proj.id === log.projectId);
+        if (p) setSelectedClient(p.client);
+
         setFormData({
             projectId: log.projectId,
             date: log.date,
@@ -300,7 +323,24 @@ const Tracker: React.FC = () => {
                     )}
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Client</label>
+                                <select
+                                    required={!editingLogId}
+                                    value={selectedClient}
+                                    onChange={(e) => {
+                                        setSelectedClient(e.target.value);
+                                        setFormData(prev => ({ ...prev, projectId: '' }));
+                                    }}
+                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                >
+                                    <option value="">Select a Client...</option>
+                                    {uniqueClients.map(c => (
+                                        <option key={c} value={c}>{c}</option>
+                                    ))}
+                                </select>
+                            </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project</label>
                                 <select
@@ -308,11 +348,23 @@ const Tracker: React.FC = () => {
                                     value={formData.projectId}
                                     onChange={(e) => setFormData({ ...formData, projectId: e.target.value })}
                                     className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                    disabled={!selectedClient}
                                 >
                                     <option value="">Select a project...</option>
-                                    {projects.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
+                                    {sortedMonthKeys.map(key => {
+                                        let label = key;
+                                        if (key !== 'Unknown Start Date') {
+                                            const [y, m] = key.split('-');
+                                            label = new Date(Number(y), Number(m) - 1).toLocaleDateString('default', { month: 'long', year: 'numeric' });
+                                        }
+                                        return (
+                                            <optgroup key={key} label={label}>
+                                                {projectsByMonth[key].map(p => (
+                                                    <option key={p.id} value={p.id}>{p.name}</option>
+                                                ))}
+                                            </optgroup>
+                                        );
+                                    })}
                                 </select>
                             </div>
                             <div className="space-y-2">
