@@ -4,6 +4,16 @@ import { Clock, Tag, Plus, Check, PencilSimple, Trash, X, FloppyDisk, Faders, Br
 import type { LogItem, LogType } from '../types';
 
 const Tracker: React.FC = () => {
+
+    const LICENSE_FEES = [
+        { label: 'Adobe Stock Video (HD)', cost: 30.00 },
+        { label: 'Adobe Stock Image', cost: 10.00 },
+        { label: 'Yellow Image Mockup', cost: 29.99 },
+        { label: 'Envato Elements Mockup', cost: 14.99 },
+        { label: 'Artgrid Music License', cost: 14.99 },
+        { label: 'Premium Beats Music License', cost: 19.99 },
+        { label: 'AI Image Generation', cost: 5.00 },
+    ];
     const { projects, logs, addLog, updateLog, deleteLog } = useApp();
     const [activeTab, setActiveTab] = useState<LogType>('TIME');
     const [success, setSuccess] = useState(false);
@@ -21,6 +31,8 @@ const Tracker: React.FC = () => {
         cost: '',
         amount: '', // For Fixed Fee
         markupPercent: '20',
+        expenseQty: '1',
+        expensePreset: '',
 
         // Media Specific
         googleSpend: '',
@@ -221,6 +233,8 @@ const Tracker: React.FC = () => {
             cost: '',
             amount: '',
             markupPercent: '20',
+            expenseQty: '1',
+            expensePreset: '',
             googleSpend: '',
             metaSpend: '',
             billingMonth: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
@@ -262,6 +276,8 @@ const Tracker: React.FC = () => {
             cost: log.cost?.toString() || '',
             amount: (log.type === 'FIXED_FEE' ? log.billableAmount : log.cost)?.toString() || '',
             markupPercent: log.markupPercent?.toString() || '20',
+            expenseQty: '1',
+            expensePreset: '',
             googleSpend: log.mediaDetails?.googleSpend?.toString() || '',
             metaSpend: log.mediaDetails?.metaSpend?.toString() || '',
             billingMonth: log.mediaDetails?.billingMonth || new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
@@ -378,6 +394,60 @@ const Tracker: React.FC = () => {
                                 />
                             </div>
                         </div>
+
+                        {activeTab === 'EXPENSE' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Expense Item</label>
+                                    <select
+                                        value={formData.expensePreset}
+                                        onChange={(e) => {
+                                            const preset = e.target.value;
+                                            const qty = parseFloat(formData.expenseQty) || 1;
+                                            const item = LICENSE_FEES.find(f => f.label === preset);
+
+                                            if (item) {
+                                                setFormData({
+                                                    ...formData,
+                                                    expensePreset: preset,
+                                                    description: preset,
+                                                    cost: (item.cost * qty).toFixed(2)
+                                                });
+                                            } else {
+                                                setFormData({ ...formData, expensePreset: preset, description: preset === 'custom' ? '' : preset });
+                                            }
+                                        }}
+                                        className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                    >
+                                        <option value="">Select Expense Type...</option>
+                                        {LICENSE_FEES.map(f => (
+                                            <option key={f.label} value={f.label}>{f.label} (${f.cost})</option>
+                                        ))}
+                                        <option value="custom">Custom (Enter manually)</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Quantity</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={formData.expenseQty}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const qty = parseFloat(val) || 0;
+                                            const item = LICENSE_FEES.find(f => f.label === formData.expensePreset);
+                                            let newCost = formData.cost;
+                                            if (item) {
+                                                newCost = (item.cost * qty).toFixed(2);
+                                            }
+                                            setFormData({ ...formData, expenseQty: val, cost: newCost });
+                                        }}
+                                        className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                        disabled={!formData.expensePreset || formData.expensePreset === 'custom'}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</label>
