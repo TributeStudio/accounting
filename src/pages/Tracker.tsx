@@ -14,6 +14,7 @@ const Tracker: React.FC = () => {
         date: new Date().toISOString().split('T')[0],
         description: '',
         hours: '',
+        rateMultiplier: '1.0',
         cost: '',
         amount: '', // For Fixed Fee
         markupPercent: '20',
@@ -105,6 +106,7 @@ const Tracker: React.FC = () => {
 
         if (activeTab === 'TIME') {
             logData.hours = Number(formData.hours);
+            logData.rateMultiplier = Number(formData.rateMultiplier || 1);
         } else if (activeTab === 'EXPENSE') {
             logData.cost = Number(formData.cost);
             logData.markupPercent = Number(formData.markupPercent);
@@ -150,6 +152,7 @@ const Tracker: React.FC = () => {
             date: new Date().toISOString().split('T')[0],
             description: '',
             hours: '',
+            rateMultiplier: '1.0',
             cost: '',
             amount: '',
             markupPercent: '20',
@@ -167,6 +170,7 @@ const Tracker: React.FC = () => {
             date: log.date,
             description: log.description,
             hours: log.hours?.toString() || '',
+            rateMultiplier: log.rateMultiplier?.toString() || '1.0',
             cost: log.cost?.toString() || '',
             amount: (log.type === 'FIXED_FEE' ? log.billableAmount : log.cost)?.toString() || '',
             markupPercent: log.markupPercent?.toString() || '20',
@@ -266,17 +270,46 @@ const Tracker: React.FC = () => {
                         </div>
 
                         {activeTab === 'TIME' && (
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours</label>
-                                <input
-                                    type="number"
-                                    step="0.25"
-                                    placeholder="0.00"
-                                    required
-                                    value={formData.hours}
-                                    onChange={(e) => setFormData({ ...formData, hours: e.target.value })}
-                                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
-                                />
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Hours (0.5 increments)</label>
+                                    <input
+                                        type="number"
+                                        step="0.5"
+                                        min="0"
+                                        placeholder="0.00"
+                                        required
+                                        value={formData.hours}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            // Allow typing but validate on blur could be better, but native step handles basic validation
+                                            setFormData({ ...formData, hours: val });
+                                        }}
+                                        onBlur={(e) => {
+                                            const val = parseFloat(e.target.value);
+                                            if (!isNaN(val)) {
+                                                // Round to nearest 0.5
+                                                const rounded = Math.round(val * 2) / 2;
+                                                setFormData({ ...formData, hours: rounded.toString() });
+                                            }
+                                        }}
+                                        className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-slate-900"
+                                    />
+                                </div>
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    <label className="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.rateMultiplier === '1.5'}
+                                            onChange={(e) => setFormData({ ...formData, rateMultiplier: e.target.checked ? '1.5' : '1.0' })}
+                                            className="w-5 h-5 text-slate-900 rounded focus:ring-slate-900 border-gray-300"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-bold text-slate-900">Premium Rate (1.5x)</span>
+                                            <span className="block text-xs text-slate-500">Apply for After-Hours, Weekend, or Rush requests.</span>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                         )}
 

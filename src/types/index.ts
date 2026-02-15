@@ -23,6 +23,7 @@ export interface LogItem {
   markupPercent?: number;
   billableAmount?: number;
   profit?: number;
+  rateMultiplier?: number; // Applies to hourly rate (e.g. 1.5 for overtime)
 
   // Media Spend Specific details
   mediaDetails?: {
