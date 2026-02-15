@@ -782,7 +782,13 @@ const Tracker: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-4">
-                                        {projectLogs.map(log => (
+                                        {projectLogs.sort((a, b) => {
+                                            const priorities: Record<string, number> = { 'TIME': 1, 'EXPENSE': 2, 'MEDIA_SPEND': 3, 'FIXED_FEE': 4 };
+                                            const pa = priorities[a.type] || 99;
+                                            const pb = priorities[b.type] || 99;
+                                            if (pa !== pb) return pa - pb;
+                                            return b.date.localeCompare(a.date);
+                                        }).map(log => (
                                             <div key={log.id} className="group relative pl-4 border-l-2 border-slate-100 hover:border-slate-900 transition-colors py-1">
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex-1 pr-4">

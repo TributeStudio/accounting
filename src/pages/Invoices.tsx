@@ -61,7 +61,13 @@ const Invoices: React.FC = () => {
             filtered = filtered.filter(l => l.date >= dateRange.start && l.date <= dateRange.end);
         }
 
-        return filtered.sort((a, b) => b.date.localeCompare(a.date));
+        return filtered.sort((a, b) => {
+            const priorities: Record<string, number> = { 'TIME': 1, 'EXPENSE': 2, 'MEDIA_SPEND': 3, 'FIXED_FEE': 4 };
+            const pa = priorities[a.type] || 99;
+            const pb = priorities[b.type] || 99;
+            if (pa !== pb) return pa - pb;
+            return b.date.localeCompare(a.date);
+        });
     }, [selectedClientId, selectedProjectId, dateFilterType, selectedMonth, dateRange, logs, projects]);
 
     const totals = useMemo(() => {
