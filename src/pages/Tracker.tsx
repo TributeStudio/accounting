@@ -281,7 +281,7 @@ const Tracker: React.FC = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-12">
+        <div className="max-w-6xl mx-auto space-y-12">
             <div className="flex flex-col items-center">
                 <h1 className="text-4xl font-bold text-slate-900 mb-2 text-center">Work Tracker</h1>
                 <p className="text-slate-500 text-center">Capture every billable second and expense.</p>
