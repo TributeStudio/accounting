@@ -811,7 +811,14 @@ const Invoices: React.FC = () => {
                                 </table>
 
                                 {/* Totals Section */}
-                                <div className="flex justify-end border-t border-slate-200 pt-4">
+                                <div className="flex justify-between border-t border-slate-200 pt-4">
+                                    <div className="text-[10px] text-slate-400 space-y-1">
+                                        <p className="font-bold text-slate-500 uppercase mb-2">Banking Information</p>
+                                        <p>{COMPANY_CONFIG.bank.name}</p>
+                                        <p>Routing: {COMPANY_CONFIG.bank.routing}</p>
+                                        <p>Account: {COMPANY_CONFIG.bank.account}</p>
+                                        <p>Beneficiary: {COMPANY_CONFIG.bank.beneficiary}</p>
+                                    </div>
                                     <div className="w-64 text-[11px]">
                                         <div className="flex justify-between mb-1 text-slate-500">
                                             <span>Services Subtotal</span>
