@@ -545,6 +545,12 @@ const Invoices: React.FC = () => {
                                             <td className="px-8 py-2 text-right font-bold text-lg text-emerald-600">-${totals.paidAmount.toFixed(2)}</td>
                                         </tr>
                                     )}
+                                    {totals.discount > 0 && (
+                                        <tr className="bg-slate-50/50">
+                                            <td colSpan={3} className="px-8 py-2 text-right font-bold text-emerald-600 uppercase text-xs">Value Added Adjustment</td>
+                                            <td className="px-8 py-2 text-right font-bold text-lg text-emerald-600">-${totals.discount.toFixed(2)}</td>
+                                        </tr>
+                                    )}
                                     <tr className="bg-slate-50/50 border-t border-slate-200">
                                         <td colSpan={3} className="px-8 py-8 text-right font-bold text-xl">Balance Due</td>
                                         <td className="px-8 py-8 text-right font-bold text-2xl text-slate-900">${totals.balanceDue.toFixed(2)}</td>
