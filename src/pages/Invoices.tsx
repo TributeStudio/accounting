@@ -671,7 +671,7 @@ const Invoices: React.FC = () => {
 
             {/* Invoice Modal Preview */}
             {showPreview && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm print:p-0 print:bg-white print:relative print:block">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm print:p-0 print:bg-white print:absolute print:inset-0 print:block">
                     <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col print:shadow-none print:max-w-none print:max-h-none print:h-auto print:rounded-none print:overflow-visible print:block">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between print:hidden">
                             <h2 className="font-bold text-xl">Invoice Preview</h2>
