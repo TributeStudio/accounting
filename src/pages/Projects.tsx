@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, UserSquare, User, Pencil, Trash } from '@phosphor-icons/react';
+import { Plus, UserSquare, User, Pencil, Trash, List, SquaresFour } from '@phosphor-icons/react';
 import type { Project } from '../types';
 
 const Projects: React.FC = () => {
@@ -13,6 +13,7 @@ const Projects: React.FC = () => {
         startDate: new Date().toISOString().split('T')[0],
         status: 'ACTIVE' as 'ACTIVE' | 'ARCHIVED' | 'COMPLETED'
     });
+    const [viewMode, setViewMode] = useState<'GRID' | 'LIST'>('GRID');
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -227,6 +228,20 @@ const Projects: React.FC = () => {
                                 return <option key={m} value={m}>{date.toLocaleDateString('default', { month: 'long', year: 'numeric' })}</option>
                             })}
                         </select>
+                        <div className="flex bg-white rounded-xl p-1 shadow-sm border border-slate-100">
+                            <button
+                                onClick={() => setViewMode('GRID')}
+                                className={`p-2 rounded-lg transition-colors ${viewMode === 'GRID' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <SquaresFour size={20} weight={viewMode === 'GRID' ? "fill" : "regular"} />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('LIST')}
+                                className={`p-2 rounded-lg transition-colors ${viewMode === 'LIST' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                                <List size={20} weight={viewMode === 'LIST' ? "bold" : "regular"} />
+                            </button>
+                        </div>
                     </div>
 
                     <button
@@ -238,63 +253,131 @@ const Projects: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedProjects.map((project) => {
-                    const billed = selectedMonth === 'ALL'
-                        ? projectMetrics[project.id]?.totalBilled
-                        : projectMetrics[project.id]?.monthBilled;
+            {viewMode === 'GRID' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {sortedProjects.map((project) => {
+                        const billed = selectedMonth === 'ALL'
+                            ? projectMetrics[project.id]?.totalBilled
+                            : projectMetrics[project.id]?.monthBilled;
 
-                    return (
-                        <div key={project.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl transition-all duration-300 relative">
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
-                                    <UserSquare size={24} weight="duotone" />
+                        return (
+                            <div key={project.id} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 group hover:shadow-xl transition-all duration-300 relative">
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                                        <UserSquare size={24} weight="duotone" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => handleEdit(project)}
+                                            className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                                            title="Edit Project"
+                                        >
+                                            <Pencil size={18} weight="bold" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(project.id)}
+                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                            title="Delete Project"
+                                        >
+                                            <Trash size={18} weight="bold" />
+                                        </button>
+                                        <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
+                                            ? 'bg-emerald-50 text-emerald-600'
+                                            : project.status === 'COMPLETED'
+                                                ? 'bg-blue-50 text-blue-600'
+                                                : 'bg-slate-100 text-slate-500'
+                                            }`}>
+                                            {project.status}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleEdit(project)}
-                                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                                        title="Edit Project"
-                                    >
-                                        <Pencil size={18} weight="bold" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(project.id)}
-                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Delete Project"
-                                    >
-                                        <Trash size={18} weight="bold" />
-                                    </button>
-                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
-                                        ? 'bg-emerald-50 text-emerald-600'
-                                        : project.status === 'COMPLETED'
-                                            ? 'bg-blue-50 text-blue-600'
-                                            : 'bg-slate-100 text-slate-500'
-                                        }`}>
-                                        {project.status}
-                                    </span>
+
+                                <h3 className="text-xl font-bold text-slate-900 mb-1">{project.name}</h3>
+                                <p className="text-sm text-slate-500 mb-6 flex items-center gap-1">
+                                    <User size={14} weight="duotone" className="opacity-50" /> {project.client}
+                                </p>
+
+                                <div className="pt-6 border-t border-slate-50">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                                            {selectedMonth === 'ALL' ? 'Total Billed' : 'Billed (Mo)'}
+                                        </p>
+                                        <p className="text-lg font-bold text-slate-900 tabular-nums">
+                                            ${(billed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
+                        )
+                    })}
+                </div>
+            ) : (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                                <th className="px-6 py-4">Project Name</th>
+                                <th className="px-6 py-4">Client</th>
+                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4 text-right">Billed {selectedMonth === 'ALL' ? '(Total)' : '(Mo)'}</th>
+                                <th className="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                            {sortedProjects.map((project) => {
+                                const billed = selectedMonth === 'ALL'
+                                    ? projectMetrics[project.id]?.totalBilled
+                                    : projectMetrics[project.id]?.monthBilled;
 
-                            <h3 className="text-xl font-bold text-slate-900 mb-1">{project.name}</h3>
-                            <p className="text-sm text-slate-500 mb-6 flex items-center gap-1">
-                                <User size={14} weight="duotone" className="opacity-50" /> {project.client}
-                            </p>
-
-                            <div className="pt-6 border-t border-slate-50">
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                                        {selectedMonth === 'ALL' ? 'Total Billed' : 'Billed (Mo)'}
-                                    </p>
-                                    <p className="text-lg font-bold text-slate-900 tabular-nums">
-                                        ${(billed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )
-                })}
-            </div>
+                                return (
+                                    <tr key={project.id} className="hover:bg-slate-50 transition-colors group">
+                                        <td className="px-6 py-4">
+                                            <div className="font-bold text-slate-900">{project.name}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2 text-sm text-slate-500">
+                                                <User size={14} weight="duotone" className="opacity-50" />
+                                                {project.client}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
+                                                    ? 'bg-emerald-50 text-emerald-600'
+                                                    : project.status === 'COMPLETED'
+                                                        ? 'bg-blue-50 text-blue-600'
+                                                        : 'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                {project.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
+                                            ${(billed || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => handleEdit(project)}
+                                                    className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                                                    title="Edit Project"
+                                                >
+                                                    <Pencil size={18} weight="bold" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(project.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                    title="Delete Project"
+                                                >
+                                                    <Trash size={18} weight="bold" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {showAddModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/60 backdrop-blur-sm">

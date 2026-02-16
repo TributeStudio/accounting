@@ -48,10 +48,9 @@
 @media print {
   @page {
     margin: 1in;
-    /* This ensures 1-inch padding on EVERY page (top/bottom/left/right) */
+    /* Consistent 1-inch margin on all pages */
     size: auto;
 
-    /* Standard CSS Paged Media rule for page numbering */
     @bottom-right {
       content: "Page " counter(page) " of " counter(pages);
       font-size: 10px;
@@ -67,35 +66,32 @@
     print-color-adjust: exact;
   }
 
-  /* Hide everything in the body by default */
-  body * {
-    visibility: hidden;
+  /* Hide all direct children of body except the print modal (portal) */
+  body>*:not(#invoice-print-modal) {
+    display: none !important;
   }
 
-  /* Restore visibility for the invoice modal and its children */
-  #invoice-print-modal,
+  /* Configure the modal to be the only visible content */
+  #invoice-print-modal {
+    display: block !important;
+    position: static !important;
+    /* Flow naturally within page margins */
+    background: white !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    /* Padding handled by @page margin */
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Ensure children are visible and behave correctly */
   #invoice-print-modal * {
     visibility: visible;
-  }
-
-  /* Position the modal to cover the page content area */
-  #invoice-print-modal {
-    position: absolute !important;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    /* Padding is handled by @page margin now to ensure multi-page consistent spacing */
-    padding: 0 !important;
-    background: white !important;
-    z-index: 9999;
-  }
-
-  /* Ensure content flows correctly for multi-page */
-  #invoice-print-modal>div {
-    overflow: visible !important;
-    height: auto !important;
     box-shadow: none !important;
+  }
+
+  #invoice-print-modal>div {
     max-width: none !important;
   }
 
