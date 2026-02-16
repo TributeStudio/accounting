@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { Plus, UserSquare, User, Pencil, Trash, List, SquaresFour } from '@phosphor-icons/react';
+import { Plus, UserSquare, User, Pencil, Trash, List, SquaresFour, MagnifyingGlass } from '@phosphor-icons/react';
 import type { Project } from '../types';
 
 const Projects: React.FC = () => {
@@ -14,6 +14,7 @@ const Projects: React.FC = () => {
         status: 'ACTIVE' as 'ACTIVE' | 'ARCHIVED' | 'COMPLETED'
     });
     const [viewMode, setViewMode] = useState<'GRID' | 'LIST'>('GRID');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -128,6 +129,15 @@ const Projects: React.FC = () => {
     const sortedProjects = useMemo(() => {
         let sorted = [...projects];
 
+        // 0. Filter by Search Query
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            sorted = sorted.filter(p =>
+                p.name.toLowerCase().includes(query) ||
+                p.client.toLowerCase().includes(query)
+            );
+        }
+
         // 1. Filter by Client
         if (selectedClient !== 'ALL') {
             sorted = sorted.filter(p => p.client === selectedClient);
@@ -193,7 +203,19 @@ const Projects: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap items-center">
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search projects..."
+                                className="bg-white border-none rounded-xl pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-slate-900 w-48 md:w-64"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
+                                <MagnifyingGlass size={18} weight="bold" />
+                            </div>
+                        </div>
                         <select
                             className="bg-white border-none rounded-xl px-4 py-3 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-slate-900"
                             value={selectedClient}
@@ -342,10 +364,10 @@ const Projects: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest ${project.status === 'ACTIVE'
-                                                    ? 'bg-emerald-50 text-emerald-600'
-                                                    : project.status === 'COMPLETED'
-                                                        ? 'bg-blue-50 text-blue-600'
-                                                        : 'bg-slate-100 text-slate-500'
+                                                ? 'bg-emerald-50 text-emerald-600'
+                                                : project.status === 'COMPLETED'
+                                                    ? 'bg-blue-50 text-blue-600'
+                                                    : 'bg-slate-100 text-slate-500'
                                                 }`}>
                                                 {project.status}
                                             </span>
