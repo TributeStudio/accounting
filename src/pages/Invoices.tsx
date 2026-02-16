@@ -123,17 +123,14 @@ const Invoices: React.FC = () => {
 
         let discount = 0;
 
-        // Apply specific fee write-offs by removing them from subtotal/totals entirely
-        if (writeOffCreativeOps) {
-            subtotal -= creativeOpsTotal;
-            creativeOpsTotal = 0;
-        }
-        if (writeOffRoiEngine) {
-            subtotal -= roiEngineTotal;
-            roiEngineTotal = 0;
-        }
+        // Apply specific fee write-offs by zeroing them out
+        if (writeOffCreativeOps) creativeOpsTotal = 0;
+        if (writeOffRoiEngine) roiEngineTotal = 0;
 
+        // Recalculate subtotal and totalMediaFees from components to ensure consistency
         const totalMediaFees = mediaMgmtTotal + creativeOpsTotal + roiEngineTotal;
+        // Override loop-derived subtotal with component sum to match breakdown exactly
+        subtotal = timeTotal + expenseTotal + feesTotal + totalMediaFees;
 
         if (writeOffExcess) {
             const nonTimeTotal = expenseTotal + feesTotal + totalMediaFees;
