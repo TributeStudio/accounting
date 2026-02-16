@@ -47,13 +47,19 @@
 /* Print Styles */
 @media print {
   @page {
-    margin: 0;
+    margin: 1in;
     size: auto;
+
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10px;
+      font-family: sans-serif;
+      color: #64748b;
+    }
   }
 
   body {
-    margin: 1in;
-    /* 1 inch padding on all sides */
+    margin: 0;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
