@@ -88,6 +88,9 @@ const Invoices: React.FC = () => {
         let timeTotal = 0;
         let expenseTotal = 0;
         let feesTotal = 0;
+        let mediaMgmtTotal = 0;
+        let creativeOpsTotal = 0;
+        let roiEngineTotal = 0;
         let subtotal = 0;
         let paidAmount = 0;
 
@@ -101,6 +104,11 @@ const Invoices: React.FC = () => {
                 amount = l.billableAmount;
                 if (l.type === 'EXPENSE') {
                     expenseTotal += amount;
+                } else if (l.type === 'MEDIA_SPEND') {
+                    const spend = (l.mediaDetails?.googleSpend || 0) + (l.mediaDetails?.metaSpend || 0) || (l.cost || 0);
+                    mediaMgmtTotal += spend * 0.125;
+                    creativeOpsTotal += spend * 0.040;
+                    roiEngineTotal += spend * 0.030;
                 } else {
                     feesTotal += amount;
                 }
@@ -113,12 +121,25 @@ const Invoices: React.FC = () => {
 
         let discount = 0;
         if (writeOffExcess) {
-            const nonTimeTotal = expenseTotal + feesTotal;
+            const nonTimeTotal = expenseTotal + feesTotal + mediaMgmtTotal + creativeOpsTotal + roiEngineTotal;
             const currentBalance = subtotal - paidAmount;
             discount = Math.max(0, currentBalance - nonTimeTotal);
         }
 
-        return { timeTotal, expenseTotal, feesTotal, subtotal, tax: subtotal * 0, total: subtotal, paidAmount, discount, balanceDue: subtotal - paidAmount - discount };
+        return {
+            timeTotal,
+            expenseTotal,
+            feesTotal,
+            mediaMgmtTotal,
+            creativeOpsTotal,
+            roiEngineTotal,
+            subtotal,
+            tax: subtotal * 0,
+            total: subtotal,
+            paidAmount,
+            discount,
+            balanceDue: subtotal - paidAmount - discount
+        };
     }, [filteredLogs, projects, writeOffExcess]);
 
     const calculateDueDate = () => {
@@ -479,10 +500,30 @@ const Invoices: React.FC = () => {
                                         <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Expenses Subtotal</td>
                                         <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.expenseTotal.toFixed(2)}</td>
                                     </tr>
-                                    <tr className="bg-slate-50/50">
-                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Fees Subtotal</td>
-                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.feesTotal.toFixed(2)}</td>
-                                    </tr>
+                                    {totals.mediaMgmtTotal > 0 && (
+                                        <tr className="bg-slate-50/50">
+                                            <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Media Mgmt (12.5%)</td>
+                                            <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.mediaMgmtTotal.toFixed(2)}</td>
+                                        </tr>
+                                    )}
+                                    {totals.creativeOpsTotal > 0 && (
+                                        <tr className="bg-slate-50/50">
+                                            <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Creative Ops (4.0%)</td>
+                                            <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.creativeOpsTotal.toFixed(2)}</td>
+                                        </tr>
+                                    )}
+                                    {totals.roiEngineTotal > 0 && (
+                                        <tr className="bg-slate-50/50">
+                                            <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">ROI Engine (3.0%)</td>
+                                            <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.roiEngineTotal.toFixed(2)}</td>
+                                        </tr>
+                                    )}
+                                    {totals.feesTotal > 0 && (
+                                        <tr className="bg-slate-50/50">
+                                            <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Other Fees Subtotal</td>
+                                            <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.feesTotal.toFixed(2)}</td>
+                                        </tr>
+                                    )}
                                     <tr className="bg-slate-50/50 border-t border-slate-200">
                                         <td colSpan={3} className="px-8 py-4 text-right font-bold text-slate-500 uppercase text-xs">Total Value</td>
                                         <td className="px-8 py-4 text-right font-bold text-lg text-slate-500">${totals.total.toFixed(2)}</td>
@@ -769,10 +810,30 @@ const Invoices: React.FC = () => {
                                             <span>Expenses Subtotal</span>
                                             <span>${totals.expenseTotal.toFixed(2)}</span>
                                         </div>
-                                        <div className="flex justify-between mb-1 text-slate-500">
-                                            <span>Fees Subtotal</span>
-                                            <span>${totals.feesTotal.toFixed(2)}</span>
-                                        </div>
+                                        {totals.mediaMgmtTotal > 0 && (
+                                            <div className="flex justify-between mb-1 text-slate-500">
+                                                <span>Media Mgmt (12.5%)</span>
+                                                <span>${totals.mediaMgmtTotal.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {totals.creativeOpsTotal > 0 && (
+                                            <div className="flex justify-between mb-1 text-slate-500">
+                                                <span>Creative Ops (4.0%)</span>
+                                                <span>${totals.creativeOpsTotal.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {totals.roiEngineTotal > 0 && (
+                                            <div className="flex justify-between mb-1 text-slate-500">
+                                                <span>ROI Engine (3.0%)</span>
+                                                <span>${totals.roiEngineTotal.toFixed(2)}</span>
+                                            </div>
+                                        )}
+                                        {totals.feesTotal > 0 && (
+                                            <div className="flex justify-between mb-1 text-slate-500">
+                                                <span>Other Fees Subtotal</span>
+                                                <span>${totals.feesTotal.toFixed(2)}</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between mb-1 text-slate-900 font-bold border-t border-slate-100 pt-1 mt-1">
                                             <span>Subtotal</span>
                                             <span>${totals.subtotal.toFixed(2)}</span>
