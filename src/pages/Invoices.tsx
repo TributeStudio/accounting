@@ -122,17 +122,23 @@ const Invoices: React.FC = () => {
         });
 
         let discount = 0;
+
+        // Apply specific fee write-offs by removing them from subtotal/totals entirely
+        if (writeOffCreativeOps) {
+            subtotal -= creativeOpsTotal;
+            creativeOpsTotal = 0;
+        }
+        if (writeOffRoiEngine) {
+            subtotal -= roiEngineTotal;
+            roiEngineTotal = 0;
+        }
+
         const totalMediaFees = mediaMgmtTotal + creativeOpsTotal + roiEngineTotal;
 
-        const creativeOpsAdjustment = writeOffCreativeOps ? creativeOpsTotal : 0;
-        const roiEngineAdjustment = writeOffRoiEngine ? roiEngineTotal : 0;
-
         if (writeOffExcess) {
-            const nonTimeTotal = (expenseTotal + feesTotal + totalMediaFees) - creativeOpsAdjustment - roiEngineAdjustment;
+            const nonTimeTotal = expenseTotal + feesTotal + totalMediaFees;
             const currentBalance = subtotal - paidAmount;
             discount = Math.max(0, currentBalance - nonTimeTotal);
-        } else {
-            discount = creativeOpsAdjustment + roiEngineAdjustment;
         }
 
         return {
