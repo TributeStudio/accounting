@@ -30,7 +30,7 @@ const Invoices: React.FC = () => {
 
     const [showPreview, setShowPreview] = useState(false);
     const [emailLoading, setEmailLoading] = useState(false);
-    const [emailDraft, setEmailDraft] = useState<string | null>(null);
+    const [, setEmailDraft] = useState<string | null>(null);
 
     const clients = useMemo(() => {
         const uniqueClients = Array.from(new Set(projects.map(p => p.client)));
