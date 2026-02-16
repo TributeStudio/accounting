@@ -137,9 +137,9 @@ const Invoices: React.FC = () => {
         subtotal = round(timeTotal) + round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
 
         if (writeOffExcess) {
-            const nonTimeTotal = round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
             const currentBalance = subtotal - paidAmount;
-            discount = Math.max(0, currentBalance - nonTimeTotal);
+            // Write off all time charges, but don't exceed the balance due
+            discount = Math.min(currentBalance, round(timeTotal));
         }
 
         return {
