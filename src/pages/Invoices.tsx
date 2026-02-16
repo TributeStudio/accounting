@@ -87,6 +87,7 @@ const Invoices: React.FC = () => {
     const totals = useMemo(() => {
         let timeTotal = 0;
         let expenseTotal = 0;
+        let feesTotal = 0;
         let subtotal = 0;
         let paidAmount = 0;
 
@@ -98,7 +99,11 @@ const Invoices: React.FC = () => {
                 timeTotal += amount;
             } else if (l.billableAmount) {
                 amount = l.billableAmount;
-                expenseTotal += amount;
+                if (l.type === 'EXPENSE') {
+                    expenseTotal += amount;
+                } else {
+                    feesTotal += amount;
+                }
             }
             subtotal += amount;
             if (l.status === 'PAID') {
@@ -107,32 +112,13 @@ const Invoices: React.FC = () => {
         });
 
         let discount = 0;
-        // If Write Off Excess is enabled, we waive the Time portion of the balance
-        // Assumes Expenses are always due.
-        // Balance = (Time + Expense) - Paid.
-        // Target = Expense (assuming unpaid) or 0 if Paid > Total.
-        // We credit the "Time" portion of the Balance.
         if (writeOffExcess) {
+            const nonTimeTotal = expenseTotal + feesTotal;
             const currentBalance = subtotal - paidAmount;
-            // We assume paidAmount covers Retainer (Expense) first? Or generic?
-            // "Only time can be billed against retainer".
-            // So PaidAmount (Retainer) covers Time.
-            // If PaidAmount covers everything, Balance is 0.
-            // If Balance > 0, and we want to write off Time:
-            // We calculate effective Expense Due. 
-            // If Expenses are not paid, they are due.
-            // Simplistic: Waiver = Balance Due - Expenses Due.
-            // But we don't track "Paid Expenses" specifically vs "Paid Time".
-            // Let's assume ALL Expenses are Due unless PaidAmount > TimeTotal?
-            // Safer: Waiver = CurrentBalance - (ExpenseTotal * 0.0? No).
-            // Let's assume Retainer (Paid) covers Time.
-            // So Expenses are added on top.
-            // So Expected Due = ExpenseTotal.
-            // Waiver = Math.max(0, currentBalance - expenseTotal);
-            discount = Math.max(0, currentBalance - expenseTotal);
+            discount = Math.max(0, currentBalance - nonTimeTotal);
         }
 
-        return { timeTotal, expenseTotal, subtotal, tax: subtotal * 0, total: subtotal, paidAmount, discount, balanceDue: subtotal - paidAmount - discount };
+        return { timeTotal, expenseTotal, feesTotal, subtotal, tax: subtotal * 0, total: subtotal, paidAmount, discount, balanceDue: subtotal - paidAmount - discount };
     }, [filteredLogs, projects, writeOffExcess]);
 
     const calculateDueDate = () => {
@@ -486,6 +472,18 @@ const Invoices: React.FC = () => {
                                 </tbody>
                                 <tfoot>
                                     <tr className="bg-slate-50/50">
+                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Services Subtotal</td>
+                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.timeTotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr className="bg-slate-50/50">
+                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Expenses Subtotal</td>
+                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.expenseTotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr className="bg-slate-50/50">
+                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Fees Subtotal</td>
+                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.feesTotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr className="bg-slate-50/50 border-t border-slate-200">
                                         <td colSpan={3} className="px-8 py-4 text-right font-bold text-slate-500 uppercase text-xs">Total Value</td>
                                         <td className="px-8 py-4 text-right font-bold text-lg text-slate-500">${totals.total.toFixed(2)}</td>
                                     </tr>
@@ -768,8 +766,12 @@ const Invoices: React.FC = () => {
                                             <span>${totals.timeTotal.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between mb-1 text-slate-500">
-                                            <span>Expenses & Fees Subtotal</span>
+                                            <span>Expenses Subtotal</span>
                                             <span>${totals.expenseTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-1 text-slate-500">
+                                            <span>Fees Subtotal</span>
+                                            <span>${totals.feesTotal.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between mb-1 text-slate-900 font-bold border-t border-slate-100 pt-1 mt-1">
                                             <span>Subtotal</span>
