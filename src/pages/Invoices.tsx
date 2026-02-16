@@ -112,7 +112,7 @@ const Invoices: React.FC = () => {
                     creativeOpsTotal += spend * 0.040;
                     roiEngineTotal += spend * 0.030;
                 } else {
-                    feesTotal += amount;
+                    // feesTotal += amount; // FIXED_FEE (Retainer) should not be a charge, only a payment if paid.
                 }
             }
             subtotal += amount;
