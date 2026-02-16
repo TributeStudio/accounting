@@ -47,14 +47,17 @@
 /* Print Styles */
 @media print {
   @page {
-    /* Hide Top Header (URL/Date) by zeroing top margin */
-    margin-top: 0;
-    /* Keep Bottom Margin for Browser Page Number (removes need for custom one) */
-    margin-bottom: 0.5in;
-    /* Keep Side Margins */
-    margin-left: 1in;
-    margin-right: 1in;
+    margin: 1in;
+    /* Standard 1-inch margins on all sides */
     size: auto;
+
+    /* Custom Page Numbering (Visible when browser headers/footers are disabled) */
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10px;
+      font-family: sans-serif;
+      color: #64748b;
+    }
   }
 
   body {
@@ -79,13 +82,8 @@
     height: auto !important;
     overflow: visible !important;
 
-    /* Restore Top Padding manually since margin-top is 0 */
-    padding-top: 1in !important;
-
-    /* Zero other paddings as they are handled by margins */
-    padding-bottom: 0 !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    /* Padding is handled entirely by @page margin */
+    padding: 0 !important;
     margin: 0 !important;
   }
 
