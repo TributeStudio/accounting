@@ -43,3 +43,18 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-200 rounded-full hover:bg-slate-300;
 }
+
+/* Print Styles */
+@media print {
+    @page {
+        margin: 0;
+        size: auto;
+    }
+    body {
+        margin: 1.0cm; /* Minimal margin to ensure content doesn't hit edge, or use padding in component */
+    }
+    /* Hide scrollbars in print */
+    ::-webkit-scrollbar {
+        display: none;
+    }
+}
