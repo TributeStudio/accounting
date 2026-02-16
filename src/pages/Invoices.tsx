@@ -495,14 +495,6 @@ const Invoices: React.FC = () => {
                                     })}
                                 </tbody>
                                 <tfoot>
-                                    <tr className="bg-slate-50/50">
-                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Services Subtotal</td>
-                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.timeTotal.toFixed(2)}</td>
-                                    </tr>
-                                    <tr className="bg-slate-50/50">
-                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Production Expenses Subtotal</td>
-                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.expenseTotal.toFixed(2)}</td>
-                                    </tr>
                                     {totals.totalMediaFees > 0 && (
                                         <>
                                             <tr className="bg-slate-50/50">
@@ -535,6 +527,14 @@ const Invoices: React.FC = () => {
                                             <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.feesTotal.toFixed(2)}</td>
                                         </tr>
                                     )}
+                                    <tr className="bg-slate-50/50">
+                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Production Expenses Subtotal</td>
+                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.expenseTotal.toFixed(2)}</td>
+                                    </tr>
+                                    <tr className="bg-slate-50/50">
+                                        <td colSpan={3} className="px-8 py-2 text-right font-bold text-slate-400 uppercase text-[10px]">Services Subtotal</td>
+                                        <td className="px-8 py-2 text-right font-bold text-slate-500">${totals.timeTotal.toFixed(2)}</td>
+                                    </tr>
                                     <tr className="bg-slate-50/50 border-t border-slate-200">
                                         <td colSpan={3} className="px-8 py-4 text-right font-bold text-slate-500 uppercase text-xs">Total Value</td>
                                         <td className="px-8 py-4 text-right font-bold text-lg text-slate-500">${totals.total.toFixed(2)}</td>
@@ -832,14 +832,7 @@ const Invoices: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="w-64 text-[11px]">
-                                        <div className="flex justify-between mb-1 text-slate-500">
-                                            <span>Services Subtotal</span>
-                                            <span>${totals.timeTotal.toFixed(2)}</span>
-                                        </div>
-                                        <div className="flex justify-between mb-1 text-slate-500">
-                                            <span>Production Expenses Subtotal</span>
-                                            <span>${totals.expenseTotal.toFixed(2)}</span>
-                                        </div>
+
                                         {totals.totalMediaFees > 0 && (
                                             <>
                                                 <div className="flex justify-between mb-1 text-slate-500">
@@ -874,6 +867,14 @@ const Invoices: React.FC = () => {
                                                 <span>${totals.feesTotal.toFixed(2)}</span>
                                             </div>
                                         )}
+                                        <div className="flex justify-between mb-1 text-slate-500">
+                                            <span>Production Expenses Subtotal</span>
+                                            <span>${totals.expenseTotal.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between mb-1 text-slate-500">
+                                            <span>Services Subtotal</span>
+                                            <span>${totals.timeTotal.toFixed(2)}</span>
+                                        </div>
                                         <div className="flex justify-between mb-1 text-slate-900 font-bold border-t border-slate-100 pt-1 mt-1">
                                             <span>Subtotal</span>
                                             <span>${totals.subtotal.toFixed(2)}</span>
