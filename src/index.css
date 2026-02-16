@@ -46,15 +46,20 @@
 
 /* Print Styles */
 @media print {
-    @page {
-        margin: 0;
-        size: auto;
-    }
-    body {
-        margin: 1.0cm; /* Minimal margin to ensure content doesn't hit edge, or use padding in component */
-    }
-    /* Hide scrollbars in print */
-    ::-webkit-scrollbar {
-        display: none;
-    }
+  @page {
+    margin: 0;
+    size: auto;
+  }
+
+  body {
+    margin: 1in;
+    /* 1 inch padding on all sides */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide scrollbars in print */
+  ::-webkit-scrollbar {
+    display: none;
+  }
 }
