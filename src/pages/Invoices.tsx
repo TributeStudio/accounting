@@ -127,13 +127,16 @@ const Invoices: React.FC = () => {
         if (writeOffCreativeOps) creativeOpsTotal = 0;
         if (writeOffRoiEngine) roiEngineTotal = 0;
 
+        // Helper to ensure float math matches display
+        const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
         // Recalculate subtotal and totalMediaFees from components to ensure consistency
-        const totalMediaFees = mediaMgmtTotal + creativeOpsTotal + roiEngineTotal;
+        const totalMediaFees = round(mediaMgmtTotal) + round(creativeOpsTotal) + round(roiEngineTotal);
         // Override loop-derived subtotal with component sum to match breakdown exactly
-        subtotal = timeTotal + expenseTotal + feesTotal + totalMediaFees;
+        subtotal = round(timeTotal) + round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
 
         if (writeOffExcess) {
-            const nonTimeTotal = expenseTotal + feesTotal + totalMediaFees;
+            const nonTimeTotal = round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
             const currentBalance = subtotal - paidAmount;
             discount = Math.max(0, currentBalance - nonTimeTotal);
         }
