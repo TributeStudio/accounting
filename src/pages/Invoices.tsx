@@ -132,7 +132,9 @@ const Invoices: React.FC = () => {
         // Recalculate subtotal and totalMediaFees from components to ensure consistency
         const totalMediaFees = round(mediaMgmtTotal) + round(creativeOpsTotal) + round(roiEngineTotal);
         // Override loop-derived subtotal with component sum to match breakdown exactly
-        subtotal = round(timeTotal) + round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
+        // NOTE: We exclude feesTotal (Retainer) from the subtotal charge because it is a pre-payment/deposit.
+        // The Payment credit below (-$15k) accounts for the cash. Billing it as a charge would double-count it against the time.
+        subtotal = round(timeTotal) + round(expenseTotal) + round(totalMediaFees);
 
         let discount = 0;
 
