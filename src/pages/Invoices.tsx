@@ -824,6 +824,12 @@ const Invoices: React.FC = () => {
                                         <p>Routing: {COMPANY_CONFIG.bank.routing}</p>
                                         <p>Account: {COMPANY_CONFIG.bank.account}</p>
                                         <p>Beneficiary: {COMPANY_CONFIG.bank.beneficiary}</p>
+
+                                        <div className="pt-4 space-y-1">
+                                            <p className="font-bold text-slate-500 uppercase mb-2">Terms</p>
+                                            <p>{getDueDateLabel()}</p>
+                                            {paymentTerms !== 'DUE_ON_RECEIPT' && <p>Due: {calculateDueDate()}</p>}
+                                        </div>
                                     </div>
                                     <div className="w-64 text-[11px]">
                                         <div className="flex justify-between mb-1 text-slate-500">
