@@ -47,8 +47,20 @@
 /* Print Styles */
 @media print {
   @page {
+    /* Set margins: Top/Left/Right 0, Bottom 1cm for footer space */
     margin: 0;
+    margin-bottom: 1cm;
     size: auto;
+
+    /* Standard CSS Paged Media rule for page numbering */
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10px;
+      font-family: sans-serif;
+      color: #64748b;
+      padding-right: 1in;
+      /* Match body padding */
+    }
   }
 
   body {
