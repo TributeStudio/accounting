@@ -523,6 +523,9 @@ const Invoices: React.FC = () => {
                                     })}
                                 </tbody>
                                 <tfoot>
+                                    <tr className="h-12 border-hidden bg-white">
+                                        <td colSpan={4}></td>
+                                    </tr>
                                     {totals.totalMediaFees > 0 && (
                                         <>
                                             <tr className="bg-slate-50/50">
