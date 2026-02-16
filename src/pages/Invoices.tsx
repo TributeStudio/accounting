@@ -27,6 +27,8 @@ const Invoices: React.FC = () => {
     const [paymentTerms, setPaymentTerms] = useState('DUE_ON_RECEIPT');
     const [customDueDate, setCustomDueDate] = useState('');
     const [writeOffExcess, setWriteOffExcess] = useState(false);
+    const [writeOffCreativeOps, setWriteOffCreativeOps] = useState(false);
+    const [writeOffRoiEngine, setWriteOffRoiEngine] = useState(false);
 
     const [showPreview, setShowPreview] = useState(false);
     const [emailLoading, setEmailLoading] = useState(false);
@@ -122,10 +124,15 @@ const Invoices: React.FC = () => {
         let discount = 0;
         const totalMediaFees = mediaMgmtTotal + creativeOpsTotal + roiEngineTotal;
 
+        const creativeOpsAdjustment = writeOffCreativeOps ? creativeOpsTotal : 0;
+        const roiEngineAdjustment = writeOffRoiEngine ? roiEngineTotal : 0;
+
         if (writeOffExcess) {
-            const nonTimeTotal = expenseTotal + feesTotal + totalMediaFees;
+            const nonTimeTotal = (expenseTotal + feesTotal + totalMediaFees) - creativeOpsAdjustment - roiEngineAdjustment;
             const currentBalance = subtotal - paidAmount;
             discount = Math.max(0, currentBalance - nonTimeTotal);
+        } else {
+            discount = creativeOpsAdjustment + roiEngineAdjustment;
         }
 
         return {
@@ -143,7 +150,7 @@ const Invoices: React.FC = () => {
             discount,
             balanceDue: subtotal - paidAmount - discount
         };
-    }, [filteredLogs, projects, writeOffExcess]);
+    }, [filteredLogs, projects, writeOffExcess, writeOffCreativeOps, writeOffRoiEngine]);
 
     const calculateDueDate = () => {
         const today = new Date();
@@ -399,7 +406,7 @@ const Invoices: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="space-y-1 flex items-center">
+                        <div className="space-y-1 flex flex-col items-start">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -408,6 +415,24 @@ const Invoices: React.FC = () => {
                                     className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                 />
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Write-off Excess Time</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={writeOffCreativeOps}
+                                    onChange={e => setWriteOffCreativeOps(e.target.checked)}
+                                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Write-off Creative Ops</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={writeOffRoiEngine}
+                                    onChange={e => setWriteOffRoiEngine(e.target.checked)}
+                                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Write-off ROI Engine</span>
                             </label>
                         </div>
                     </div>
