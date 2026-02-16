@@ -122,6 +122,10 @@ const Invoices: React.FC = () => {
             }
         });
 
+        // Apply specific fee write-offs by zeroing them out completely (per user request)
+        if (writeOffCreativeOps) creativeOpsTotal = 0;
+        if (writeOffRoiEngine) roiEngineTotal = 0;
+
         // Helper to ensure float math matches display
         const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
@@ -130,21 +134,12 @@ const Invoices: React.FC = () => {
         // Override loop-derived subtotal with component sum to match breakdown exactly
         subtotal = round(timeTotal) + round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
 
-        // Write-off logic: Instead of removing form total, we add to discount.
-        let specificWriteOffs = 0;
-        if (writeOffCreativeOps) specificWriteOffs += round(creativeOpsTotal);
-        if (writeOffRoiEngine) specificWriteOffs += round(roiEngineTotal);
-
-        let discount = specificWriteOffs;
+        let discount = 0;
 
         if (writeOffExcess) {
-            const nonTimeTotal = round(expenseTotal) + round(feesTotal) + round(totalMediaFees);
-            // The client must pay Non-Time charges, MINUS any specific write-offs (Ops/ROI)
-            const mustPay = Math.max(0, nonTimeTotal - specificWriteOffs);
             const currentBalance = subtotal - paidAmount;
-
-            // Discount is whatever is needed to reduce balance to 'mustPay'
-            discount = Math.max(0, currentBalance - mustPay);
+            // Write off all time charges, but don't exceed the balance due
+            discount = Math.min(currentBalance, round(timeTotal));
         }
 
         return {
