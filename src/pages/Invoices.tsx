@@ -139,9 +139,11 @@ const Invoices: React.FC = () => {
         let discount = 0;
 
         if (writeOffExcess) {
-            // Write off strict excess: Time Charges - Retainer Fee
-            // If Time is 17k and Retainer is 15k, discount is 2k.
-            discount = Math.max(0, round(timeTotal) - round(feesTotal));
+            // Write off strict excess: Time Charges - Retainer Budget
+            // Use the GREATER of the Retainer Fee (Log) or the Paid Amount as the baseline.
+            // This ensures if the user deleted the retainer fee log but kept the payment, we still calculate relative to the payment.
+            const retainerBaseline = Math.max(round(feesTotal), paidAmount);
+            discount = Math.max(0, round(timeTotal) - retainerBaseline);
         }
 
         return {
