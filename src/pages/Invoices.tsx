@@ -71,7 +71,7 @@ const Invoices: React.FC = () => {
             const getWeight = (l: typeof a) => {
                 const desc = l.description.toLowerCase();
                 // 1. Media
-                if (l.type === 'MEDIA_SPEND') return 10;
+                if (l.type === 'MEDIA_SPEND' || desc.includes('media management')) return 10;
                 // 2. Retainer
                 if (l.type === 'FIXED_FEE' || desc.includes('retainer')) return 20;
                 // 4. Stand Up Meetings (Last)
@@ -814,45 +814,7 @@ const Invoices: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-[11px]">
-                                        {/* Services / Time Section */}
-                                        <tr className="bg-slate-50 border-y border-slate-100">
-                                            <td colSpan={4} className="py-2 px-4 font-bold text-slate-900 uppercase tracking-wider text-[10px]">Services / Time</td>
-                                        </tr>
-                                        {Object.entries(filteredLogs.filter(l => l.type === 'TIME').reduce((groups, log) => {
-                                            const pid = log.projectId;
-                                            if (!groups[pid]) groups[pid] = [];
-                                            groups[pid].push(log);
-                                            return groups;
-                                        }, {} as Record<string, typeof filteredLogs>)).map(([projectId, projectLogs]) => (
-                                            <React.Fragment key={`time-${projectId}`}>
-                                                {/* Project Header */}
-                                                <tr className="border-b border-slate-50">
-                                                    <td colSpan={4} className="py-2 px-0 font-bold text-slate-500 uppercase tracking-wider text-[10px] pl-6">
-                                                        {projects.find(p => p.id === projectId)?.name || 'Unassigned'}
-                                                    </td>
-                                                </tr>
-                                                {projectLogs.map((log) => {
-                                                    const project = projects.find(p => p.id === log.projectId);
-                                                    const hourlyRate = (log.rate || project?.hourlyRate || 0);
-                                                    const qty = log.hours || 0;
-                                                    const unitPrice = hourlyRate * (log.rateMultiplier || 1);
-                                                    const amount = qty * unitPrice;
-
-                                                    return (
-                                                        <tr key={log.id}>
-                                                            <td className="py-2 pr-4 pl-8 align-top">
-                                                                <span className="text-slate-500">{log.description}</span>
-                                                            </td>
-                                                            <td className="py-2 text-center align-top text-slate-500">{qty}</td>
-                                                            <td className="py-2 text-right align-top text-slate-500">${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </React.Fragment>
-                                        ))}
-
-                                        {/* Expenses Section */}
+                                        {/* Expenses Section (Media & Retainers First) */}
                                         <tr className="bg-slate-50 border-y border-slate-100">
                                             <td colSpan={4} className="py-2 px-4 font-bold text-slate-900 uppercase tracking-wider text-[10px]">Expenses & Fees</td>
                                         </tr>
@@ -901,6 +863,44 @@ const Invoices: React.FC = () => {
                                                             </td>
                                                             <td className="py-2 text-center align-top text-slate-500">{qty > 1 ? qty : '-'}</td>
                                                             <td className="py-2 text-right align-top text-slate-500">{log.type === 'MEDIA_SPEND' ? '-' : `$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </React.Fragment>
+                                        ))}
+
+                                        {/* Services / Time Section */}
+                                        <tr className="bg-slate-50 border-y border-slate-100">
+                                            <td colSpan={4} className="py-2 px-4 font-bold text-slate-900 uppercase tracking-wider text-[10px]">Services / Time</td>
+                                        </tr>
+                                        {Object.entries(filteredLogs.filter(l => l.type === 'TIME').reduce((groups, log) => {
+                                            const pid = log.projectId;
+                                            if (!groups[pid]) groups[pid] = [];
+                                            groups[pid].push(log);
+                                            return groups;
+                                        }, {} as Record<string, typeof filteredLogs>)).map(([projectId, projectLogs]) => (
+                                            <React.Fragment key={`time-${projectId}`}>
+                                                {/* Project Header */}
+                                                <tr className="border-b border-slate-50">
+                                                    <td colSpan={4} className="py-2 px-0 font-bold text-slate-500 uppercase tracking-wider text-[10px] pl-6">
+                                                        {projects.find(p => p.id === projectId)?.name || 'Unassigned'}
+                                                    </td>
+                                                </tr>
+                                                {projectLogs.map((log) => {
+                                                    const project = projects.find(p => p.id === log.projectId);
+                                                    const hourlyRate = (log.rate || project?.hourlyRate || 0);
+                                                    const qty = log.hours || 0;
+                                                    const unitPrice = hourlyRate * (log.rateMultiplier || 1);
+                                                    const amount = qty * unitPrice;
+
+                                                    return (
+                                                        <tr key={log.id}>
+                                                            <td className="py-2 pr-4 pl-8 align-top">
+                                                                <span className="text-slate-500">{log.description}</span>
+                                                            </td>
+                                                            <td className="py-2 text-center align-top text-slate-500">{qty}</td>
+                                                            <td className="py-2 text-right align-top text-slate-500">${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                             <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     );
