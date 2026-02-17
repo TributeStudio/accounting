@@ -169,6 +169,41 @@ const Invoices: React.FC = () => {
         };
     }, [filteredLogs, projects, writeOffExcess, writeOffCreativeOps, writeOffRoiEngine, writeOffMediaMgmt]);
 
+    const billingPeriodLabel = useMemo(() => {
+        if (dateFilterType === 'MONTH' && selectedMonth) {
+            const [y, m] = selectedMonth.split('-');
+            const date = new Date(parseInt(y), parseInt(m) - 1);
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+        if (dateFilterType === 'RANGE' && dateRange.start && dateRange.end) {
+            const formatDate = (d: string) => {
+                const date = new Date(d);
+                // Adjust for timezone offset to avoid off-by-one errors when displaying pure dates
+                const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+                const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+                return adjustedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            };
+            return `${formatDate(dateRange.start)} - ${formatDate(dateRange.end)}`;
+        }
+        if (filteredLogs.length > 0) {
+            const dates = filteredLogs.map(l => l.date).sort();
+            const start = dates[0];
+            const end = dates[dates.length - 1];
+
+            const formatDate = (d: string) => {
+                const date = new Date(d);
+                // Adjust for timezone offset
+                const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+                const adjustedDate = new Date(date.getTime() + userTimezoneOffset);
+                return adjustedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            };
+
+            if (start === end) return formatDate(start);
+            return `${formatDate(start)} - ${formatDate(end)}`;
+        }
+        return '';
+    }, [dateFilterType, selectedMonth, dateRange, filteredLogs]);
+
     const calculateDueDate = () => {
         const today = new Date();
         if (paymentTerms === 'NET_15') {
@@ -748,6 +783,11 @@ const Invoices: React.FC = () => {
                                             #{draftInvoiceNumber}
                                         </p>
                                         <p className="text-[11px] text-slate-500 mt-2">{new Date().toLocaleDateString()}</p>
+                                        {billingPeriodLabel && (
+                                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wide font-bold">
+                                                {billingPeriodLabel}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
