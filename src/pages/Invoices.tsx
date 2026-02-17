@@ -30,6 +30,7 @@ const Invoices: React.FC = () => {
     const [writeOffExcess, setWriteOffExcess] = useState(false);
     const [writeOffCreativeOps, setWriteOffCreativeOps] = useState(false);
     const [writeOffRoiEngine, setWriteOffRoiEngine] = useState(false);
+    const [writeOffMediaMgmt, setWriteOffMediaMgmt] = useState(false);
 
     const [showPreview, setShowPreview] = useState(false);
     const [emailLoading, setEmailLoading] = useState(false);
@@ -138,12 +139,17 @@ const Invoices: React.FC = () => {
 
         let discount = 0;
 
+        if (writeOffMediaMgmt) {
+            // Media Mgmt Write-off: Show charge, but credit back via discount
+            discount += round(mediaMgmtTotal);
+        }
+
         if (writeOffExcess) {
             // Write off strict excess: Time Charges - Retainer Budget
             // Use the GREATER of the Retainer Fee (Log) or the Paid Amount as the baseline.
             // This ensures if the user deleted the retainer fee log but kept the payment, we still calculate relative to the payment.
             const retainerBaseline = Math.max(round(feesTotal), paidAmount);
-            discount = Math.max(0, round(timeTotal) - retainerBaseline);
+            discount += Math.max(0, round(timeTotal) - retainerBaseline);
         }
 
         return {
@@ -161,7 +167,7 @@ const Invoices: React.FC = () => {
             discount,
             balanceDue: subtotal - paidAmount - discount
         };
-    }, [filteredLogs, projects, writeOffExcess, writeOffCreativeOps, writeOffRoiEngine]);
+    }, [filteredLogs, projects, writeOffExcess, writeOffCreativeOps, writeOffRoiEngine, writeOffMediaMgmt]);
 
     const calculateDueDate = () => {
         const today = new Date();
@@ -444,6 +450,15 @@ const Invoices: React.FC = () => {
                                     className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                 />
                                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Write-off ROI Engine</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={writeOffMediaMgmt}
+                                    onChange={e => setWriteOffMediaMgmt(e.target.checked)}
+                                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Write-off Media Mgmt</span>
                             </label>
                         </div>
                     </div>
