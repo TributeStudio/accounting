@@ -804,8 +804,8 @@ const Invoices: React.FC = () => {
                                                                 <span className="text-slate-500">{log.description}</span>
                                                             </td>
                                                             <td className="py-2 text-center align-top text-slate-500">{qty}</td>
-                                                            <td className="py-2 text-right align-top text-slate-500">${unitPrice.toFixed(2)}</td>
-                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toFixed(2)}</td>
+                                                            <td className="py-2 text-right align-top text-slate-500">${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     );
                                                 })}
@@ -860,8 +860,8 @@ const Invoices: React.FC = () => {
                                                                 {subDescription}
                                                             </td>
                                                             <td className="py-2 text-center align-top text-slate-500">{qty > 1 ? qty : '-'}</td>
-                                                            <td className="py-2 text-right align-top text-slate-500">{log.type === 'MEDIA_SPEND' ? '-' : `$${unitPrice.toFixed(2)}`}</td>
-                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toFixed(2)}</td>
+                                                            <td className="py-2 text-right align-top text-slate-500">{log.type === 'MEDIA_SPEND' ? '-' : `$${unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}</td>
+                                                            <td className="py-2 text-right align-top font-bold text-slate-900">${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                         </tr>
                                                     );
                                                 })}
@@ -891,25 +891,25 @@ const Invoices: React.FC = () => {
                                             <>
                                                 <div className="flex justify-between mb-1 text-slate-500">
                                                     <span>Media Fees Subtotal</span>
-                                                    <span>${totals.totalMediaFees.toFixed(2)}</span>
+                                                    <span>${totals.totalMediaFees.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                 </div>
                                                 <div className="pl-4 space-y-1 mb-2 border-l-2 border-slate-100 ml-1">
                                                     {totals.mediaMgmtTotal > 0 && (
                                                         <div className="flex justify-between text-[10px] text-slate-400">
                                                             <span>Media Mgmt (12.5%)</span>
-                                                            <span>${totals.mediaMgmtTotal.toFixed(2)}</span>
+                                                            <span>${totals.mediaMgmtTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                         </div>
                                                     )}
                                                     {totals.creativeOpsTotal > 0 && (
                                                         <div className="flex justify-between text-[10px] text-slate-400">
                                                             <span>Creative Ops (4.0%)</span>
-                                                            <span>${totals.creativeOpsTotal.toFixed(2)}</span>
+                                                            <span>${totals.creativeOpsTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                         </div>
                                                     )}
                                                     {totals.roiEngineTotal > 0 && (
                                                         <div className="flex justify-between text-[10px] text-slate-400">
                                                             <span>ROI Engine (3.0%)</span>
-                                                            <span>${totals.roiEngineTotal.toFixed(2)}</span>
+                                                            <span>${totals.roiEngineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -918,36 +918,36 @@ const Invoices: React.FC = () => {
                                         {totals.feesTotal > 0 && (
                                             <div className="flex justify-between mb-1 text-slate-500">
                                                 <span>Retainer</span>
-                                                <span>${totals.feesTotal.toFixed(2)}</span>
+                                                <span>${totals.feesTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between mb-1 text-slate-500">
                                             <span>Production Expenses Subtotal</span>
-                                            <span>${totals.expenseTotal.toFixed(2)}</span>
+                                            <span>${totals.expenseTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between mb-1 text-slate-500">
                                             <span>Services Subtotal</span>
-                                            <span>${totals.timeTotal.toFixed(2)}</span>
+                                            <span>${totals.timeTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between mb-1 text-slate-900 font-bold border-t border-slate-100 pt-1 mt-1">
                                             <span>Subtotal</span>
-                                            <span>${totals.subtotal.toFixed(2)}</span>
+                                            <span>${totals.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         {totals.paidAmount > 0 && (
                                             <div className="flex justify-between mb-1 text-emerald-600 font-bold">
                                                 <span>Less: Paid / Retainer</span>
-                                                <span>-${totals.paidAmount.toFixed(2)}</span>
+                                                <span>-${totals.paidAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                         )}
                                         {totals.discount > 0 && (
                                             <div className="flex justify-between mb-1 text-emerald-600 font-bold">
                                                 <span>Value Added Adjustment</span>
-                                                <span>-${totals.discount.toFixed(2)}</span>
+                                                <span>-${totals.discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between font-bold text-sm text-slate-900 border-t border-slate-200 pt-2 mt-2">
                                             <span>Amount Due</span>
-                                            <span>${totals.balanceDue.toFixed(2)}</span>
+                                            <span>${totals.balanceDue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                     </div>
                                 </div>
