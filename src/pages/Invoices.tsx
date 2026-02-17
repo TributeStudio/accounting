@@ -784,8 +784,8 @@ const Invoices: React.FC = () => {
                                         </p>
                                         <p className="text-[11px] text-slate-500 mt-2">{new Date().toLocaleDateString()}</p>
                                         {billingPeriodLabel && (
-                                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wide font-bold">
-                                                {billingPeriodLabel}
+                                            <p className="text-[10px] text-slate-900 mt-1 uppercase tracking-wide font-bold">
+                                                Billing Period: {billingPeriodLabel}
                                             </p>
                                         )}
                                     </div>
