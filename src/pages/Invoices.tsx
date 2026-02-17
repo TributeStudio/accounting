@@ -98,43 +98,44 @@ const Invoices: React.FC = () => {
         let subtotal = 0;
         let paidAmount = 0;
 
+        // Helper to ensure float math matches display
+        const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
         filteredLogs.forEach(l => {
             const project = projects.find(p => p.id === l.projectId);
             let amount = 0;
             if (l.type === 'TIME' && l.hours && project) {
                 amount = l.hours * (l.rate || project.hourlyRate) * (l.rateMultiplier || 1);
-                timeTotal += amount;
+                timeTotal += round(amount);
             } else if (l.billableAmount) {
                 amount = l.billableAmount;
                 if (l.type === 'EXPENSE') {
-                    expenseTotal += amount;
+                    expenseTotal += round(amount);
                 } else if (l.type === 'MEDIA_SPEND') {
                     const spend = (l.mediaDetails?.googleSpend || 0) + (l.mediaDetails?.metaSpend || 0) || (l.cost || 0);
-                    mediaMgmtTotal += spend * 0.125;
-                    creativeOpsTotal += spend * 0.040;
-                    roiEngineTotal += spend * 0.030;
+                    // Round components individually to match line items
+                    mediaMgmtTotal += round(spend * 0.125);
+                    creativeOpsTotal += round(spend * 0.040);
+                    roiEngineTotal += round(spend * 0.030);
                 } else {
-                    feesTotal += amount;
+                    feesTotal += round(amount);
                 }
             }
-            subtotal += amount;
+            // subtotal accumulates rounded amounts implicitly via totals
             if (l.status === 'PAID') {
-                paidAmount += amount;
+                paidAmount += round(amount); // Estimate paid amount based on rounded value
             }
         });
 
-        // Apply specific fee write-offs by zeroing them out completely (per user request)
+        // Apply specific fee write-offs by zeroing them out completely
         if (writeOffCreativeOps) creativeOpsTotal = 0;
         if (writeOffRoiEngine) roiEngineTotal = 0;
-
-        // Helper to ensure float math matches display
-        const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
         // Recalculate subtotal and totalMediaFees from components to ensure consistency
         const totalMediaFees = round(mediaMgmtTotal) + round(creativeOpsTotal) + round(roiEngineTotal);
         // Override loop-derived subtotal with component sum to match breakdown exactly
         // NOTE: We exclude feesTotal (Retainer) from the subtotal charge because it is a pre-payment/deposit.
-        // The Payment credit below (-$15k) accounts for the cash. Billing it as a charge would double-count it against the time.
+        // We sum the rounded totals to get the final subtotal
         subtotal = round(timeTotal) + round(expenseTotal) + round(totalMediaFees);
 
         let discount = 0;
@@ -259,7 +260,7 @@ const Invoices: React.FC = () => {
         // Use MAX + 1 to avoid duplicates if invoices were deleted
         const prefix = `${COMPANY_CONFIG.invoicePrefix}-${clientCode}-${timeCode}`;
         const existingNumbers = invoices
-            .filter(i => i.invoiceNumber && i.invoiceNumber.startsWith(prefix))
+            .filter(i => i.invoiceNumber && i.invoiceNumber.toLowerCase().startsWith(prefix.toLowerCase()))
             .map(i => parseInt(i.invoiceNumber.split('-').pop() || '0'));
         const maxSeq = Math.max(0, ...existingNumbers);
         const sequence = (maxSeq + 1).toString().padStart(2, '0');
@@ -853,11 +854,21 @@ const Invoices: React.FC = () => {
                                                     let unitPrice = 0;
                                                     let amount = log.billableAmount || 0;
 
-                                                    // Deduct written-off amounts from displayed line item
+                                                    // Deduct written-off amounts from displayed line item (Recalculating rounded base amounts)
                                                     if (log.type === 'MEDIA_SPEND' && log.mediaDetails) {
-                                                        if (writeOffCreativeOps) amount -= (log.mediaDetails.fees?.creativeOps || 0);
-                                                        if (writeOffRoiEngine) amount -= (log.mediaDetails.fees?.roiEngine || 0);
-                                                        // Note: Media Mgmt write-off is handled via discount below, so we keep it in the line item charge.
+                                                        // Helper to ensure float math matches display
+                                                        const round = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+                                                        const spend = (log.mediaDetails.googleSpend || 0) + (log.mediaDetails.metaSpend || 0);
+                                                        const fee125 = round(spend * 0.125); // Media Mgmt
+                                                        const fee040 = round(spend * 0.040); // Creative Ops
+                                                        const fee030 = round(spend * 0.030); // ROI Engine
+
+                                                        amount = fee125 + fee040 + fee030; // 19.5% Subtotal Rounded
+
+                                                        if (writeOffCreativeOps) amount -= fee040;
+                                                        if (writeOffRoiEngine) amount -= fee030;
+                                                        // Note: Media Mgmt write-off is handled via discount below.
                                                     }
 
                                                     const match = LICENSE_FEES.find(f => f.label === log.description);
