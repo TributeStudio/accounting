@@ -14,8 +14,8 @@ export const COMPANY_CONFIG = {
     bank: {
         name: 'Wells Fargo Bank',
         address: '333 Market Street, San Francisco, CA 94105',
-        routing: '121000248',
-        account: '00000000', // Placeholder as per previous code
+        routing: '121042882',
+        account: '3782655249',
         beneficiary: 'Tribute Studio' // Or implied by company name
     },
     // Future proofing for UI colors if needed, though Tailwind classes are currently hardcoded
