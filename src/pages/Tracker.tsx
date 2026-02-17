@@ -111,6 +111,7 @@ const Tracker: React.FC = () => {
                 { label: 'Copywriting', rate: 200 },
                 { label: 'Design', rate: 175 },
                 { label: 'Code Writing / Development', rate: 225 },
+                { label: 'Measurement & Attribution Architecture', rate: 300 },
             ]
         },
         {
