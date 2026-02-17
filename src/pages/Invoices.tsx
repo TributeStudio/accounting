@@ -204,6 +204,20 @@ const Invoices: React.FC = () => {
         return '';
     }, [dateFilterType, selectedMonth, dateRange, filteredLogs]);
 
+    const displayDate = useMemo(() => {
+        if (dateFilterType === 'MONTH' && selectedMonth) {
+            const [y, m] = selectedMonth.split('-');
+            const period = new Date(Number(y), Number(m) - 1);
+            const now = new Date();
+            // If filtered month is completely in the past, use the last day of that month as invoice date
+            if (period.getFullYear() < now.getFullYear() || (period.getFullYear() === now.getFullYear() && period.getMonth() < now.getMonth())) {
+                const lastDay = new Date(Number(y), Number(m), 0);
+                return lastDay.toLocaleDateString('en-US');
+            }
+        }
+        return new Date().toLocaleDateString('en-US');
+    }, [dateFilterType, selectedMonth]);
+
     const calculateDueDate = () => {
         const today = new Date();
         if (paymentTerms === 'NET_15') {
@@ -242,10 +256,13 @@ const Invoices: React.FC = () => {
         const month = (now.getMonth() + 1).toString().padStart(2, '0');
         const timeCode = `${year}${month}`;
 
-        // Count existing invoices for this client in this month
+        // Use MAX + 1 to avoid duplicates if invoices were deleted
         const prefix = `${COMPANY_CONFIG.invoicePrefix}-${clientCode}-${timeCode}`;
-        const count = invoices.filter(i => i.invoiceNumber && i.invoiceNumber.startsWith(prefix)).length;
-        const sequence = (count + 1).toString().padStart(2, '0');
+        const existingNumbers = invoices
+            .filter(i => i.invoiceNumber && i.invoiceNumber.startsWith(prefix))
+            .map(i => parseInt(i.invoiceNumber.split('-').pop() || '0'));
+        const maxSeq = Math.max(0, ...existingNumbers);
+        const sequence = (maxSeq + 1).toString().padStart(2, '0');
 
         return `${prefix}-${sequence}`;
     };
@@ -782,7 +799,7 @@ const Invoices: React.FC = () => {
                                         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest text-[#94a3b8]">
                                             #{draftInvoiceNumber}
                                         </p>
-                                        <p className="text-[11px] text-slate-500 mt-2">{new Date().toLocaleDateString()}</p>
+                                        <p className="text-[11px] text-slate-500 mt-2">{displayDate}</p>
                                         {billingPeriodLabel && (
                                             <p className="text-[10px] text-slate-900 mt-1 uppercase tracking-wide font-bold">
                                                 Billing Period: {billingPeriodLabel}
@@ -836,6 +853,13 @@ const Invoices: React.FC = () => {
                                                     let unitPrice = 0;
                                                     let amount = log.billableAmount || 0;
 
+                                                    // Deduct written-off amounts from displayed line item
+                                                    if (log.type === 'MEDIA_SPEND' && log.mediaDetails) {
+                                                        if (writeOffCreativeOps) amount -= (log.mediaDetails.fees?.creativeOps || 0);
+                                                        if (writeOffRoiEngine) amount -= (log.mediaDetails.fees?.roiEngine || 0);
+                                                        // Note: Media Mgmt write-off is handled via discount below, so we keep it in the line item charge.
+                                                    }
+
                                                     const match = LICENSE_FEES.find(f => f.label === log.description);
                                                     if (match && log.cost && log.cost > match.cost + 0.01) {
                                                         qty = Math.round(log.cost / match.cost);
@@ -843,6 +867,9 @@ const Invoices: React.FC = () => {
                                                     unitPrice = qty > 0 ? amount / qty : 0;
 
                                                     let description = log.description;
+                                                    // Fix common typo
+                                                    description = description.replace(/DaVinchi/gi, 'DaVinci');
+
                                                     let subDescription: any = null;
 
                                                     if (log.type === 'MEDIA_SPEND' && log.mediaDetails) {
